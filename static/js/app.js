@@ -33,7 +33,6 @@ document.getElementById('btn-login').addEventListener('click', async () => {
     }
 });
 
-// CHECK STATUS & FLOW
 async function checkStatus() {
     const res = await fetch('/api/status');
     if (!res.ok) return showView('view-login');
@@ -46,8 +45,12 @@ async function checkStatus() {
         return showView('view-onboarding');
     }
 
-    // 2. Se la sfida non è ancora sbloccata da Stefano
-    if (!status.sfida_iniziata) {
+    // --- AGGIUNTA PROATTIVA: Bypass per Preview ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const isPreview = urlParams.get('preview') === '1' && currentUser.is_admin;
+
+    // 2. Se la sfida non è sbloccata (e non sei in preview)
+    if (!status.sfida_iniziata && !isPreview) {
         if (currentUser.is_admin) {
             document.getElementById('admin-controls').classList.remove('hidden');
         }
@@ -60,7 +63,7 @@ async function checkStatus() {
         return showView('view-feed');
     }
 
-    // 4. Altrimenti -> Apri Fotocamera con Ghost
+    // 4. Altrimenti -> Apri Fotocamera
     if (status.ghost_url) {
         document.getElementById('ghost-overlay').style.backgroundImage = `url('${status.ghost_url}')`;
     }
