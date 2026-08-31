@@ -89,19 +89,23 @@ document.getElementById('btn-save-nickname').addEventListener('click', async () 
     if (res.ok) checkStatus();
 });
 
-// FIX ZOOM: Avvia la fotocamera forzandola in verticale (Portrait HD)
 async function startCamera() {
     try {
         stream = await navigator.mediaDevices.getUserMedia({ 
             video: { 
                 facingMode: "user",
-                width: { ideal: 720 },
-                height: { ideal: 1280 } 
+                aspectRatio: { ideal: 9/16 }
             }, 
             audio: false 
         });
         const video = document.getElementById('camera-stream');
         video.srcObject = stream;
+        
+        // DEBUG temporaneo: controlla cosa restituisce davvero il device
+        video.onloadedmetadata = () => {
+            console.log('Video reale:', video.videoWidth, 'x', video.videoHeight);
+        };
+        
         video.classList.remove('hidden');
         document.getElementById('camera-canvas').classList.add('hidden');
         document.getElementById('btn-capture').classList.remove('hidden');
