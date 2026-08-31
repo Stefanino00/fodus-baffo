@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fodus Baffo</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>FODUS BAFFO 🥸</h1>
+            <div id="countdown" class="countdown-badge">-- gg al 24 Dic</div>
+        </header>
+
+        <section id="view-login" class="view active">
+            <div class="card">
+                <h2>Inserisci PIN</h2>
+                <p class="subtitle">Digita il tuo codice univoco per accedere</p>
+                <input type="password" id="pin-input" maxlength="4" placeholder="****" pattern="\d*">
+                <button id="btn-login" class="btn-primary">Accedi</button>
+                <p id="login-error" class="error-msg"></p>
+            </div>
+        </section>
+
+        <section id="view-onboarding" class="view">
+            <div class="card">
+                <h2>Benvenuto su Fodus Baffo!</h2>
+                <p class="subtitle">Scegli il tuo soprannome di battaglia per la sfida fino al 24 Dicembre 2026.</p>
+                <input type="text" id="nickname-input" placeholder="Il tuo soprannome..." maxlength="20">
+                <button id="btn-save-nickname" class="btn-primary">Conferma e Salva</button>
+            </div>
+        </section>
+
+        <section id="view-waiting" class="view">
+            <div class="card">
+                <h2>La sfida sta per iniziare... ⏳</h2>
+                <p class="subtitle">In attesa che Stefano dia il via alla primissima foto!</p>
+                <div id="admin-controls" class="hidden">
+                    <hr>
+                    <p class="admin-label">Pannello Admin (Stefano)</p>
+                    <button id="btn-unlock-challenge" class="btn-admin">🚀 SBLOCCA SFIDA PER TUTTI</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-camera" class="view">
+            <div class="camera-wrapper">
+                <video id="camera-stream" autoplay playsinline muted></video>
+                <canvas id="camera-canvas" class="hidden"></canvas>
+                <div id="ghost-overlay" class="ghost-overlay"></div>
+            </div>
+            
+            <div class="camera-actions">
+                <button id="btn-capture" class="btn-shutter"></button>
+                <div id="retake-actions" class="hidden">
+                    <button id="btn-retake" class="btn-secondary">Rifai 🔄</button>
+                    <button id="btn-upload" class="btn-primary">Invia Definitiva 🚀</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-feed" class="view">
+            <div class="feed-header">
+                <h2>Foto di Oggi 🔥</h2>
+            </div>
+            <div id="feed-container" class="feed-list">
+                </div>
+        </section>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
