@@ -252,6 +252,12 @@ input::placeholder { color: #C7C7CC; font-weight: 400; }
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
+#camera-stream, #camera-canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* RIMETTILO: Serve a far combaciare l'anteprima al taglio finale! */
+}
+
 #camera-stream { transform: scaleX(-1); }
 
 .ghost-overlay {
