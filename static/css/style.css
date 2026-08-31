@@ -267,13 +267,12 @@ input::placeholder { color: #C7C7CC; font-weight: 400; }
 .camera-wrapper {
     position: relative;
     width: 100%;
-    aspect-ratio: 9/16;
+    aspect-ratio: 3/4; /* era 9/16 — meno stretto, meno crop, più campo visivo */
     background: #000;
-    border-radius: 32px; /* Molto arrotondato come iPhone */
+    border-radius: 32px;
     overflow: hidden;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
-
 #camera-stream, #camera-canvas {
     width: 100%;
     height: 100%;
@@ -379,11 +378,10 @@ input::placeholder { color: #C7C7CC; font-weight: 400; }
     position: relative; 
     border-radius: 20px; 
     overflow: hidden; 
-    aspect-ratio: 9/16; 
+    aspect-ratio: 3/4; /* era 9/16 — stessa forma della camera, coerenza nel calendario */
     box-shadow: var(--shadow-card);
     background: var(--surface);
 }
-
 .photo-item img { 
     width: 100%; height: 100%; 
     object-fit: cover; 
