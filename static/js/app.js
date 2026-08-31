@@ -56,11 +56,17 @@ async function checkStatus() {
     else if (status.has_photo_today) {
         actionCard.innerHTML = `<h3>Grande! 🎉</h3><p class="stat-desc">Hai già fatto la tua foto oggi.</p>`;
     } 
-    // Se NON ha ancora fatto la foto
+// Se NON ha ancora fatto la foto
     else {
         actionCard.innerHTML = `<h3>Tocca a te! 📸</h3><button id="btn-go-camera" class="btn-primary">Scatta la foto di oggi</button>`;
         document.getElementById('btn-go-camera').addEventListener('click', () => {
-            if (status.ghost_url) document.getElementById('ghost-overlay').style.backgroundImage = `url('${status.ghost_url}')`;
+            
+            // LA SAGOMA DI DEFAULT PER IL GIORNO 1
+            const defaultGhost = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 1280'%3E%3Cellipse cx='360' cy='500' rx='180' ry='240' fill='none' stroke='white' stroke-width='6' stroke-dasharray='15,15' opacity='0.7'/%3E%3Cpath d='M100,1280 C100,950 220,850 360,850 C500,850 620,950 620,1280' fill='none' stroke='white' stroke-width='6' stroke-dasharray='15,15' opacity='0.7'/%3E%3C/svg%3E";
+            
+            // Usa la foto di ieri, o la sagoma di default se è il giorno 1
+            document.getElementById('ghost-overlay').style.backgroundImage = `url('${status.ghost_url || defaultGhost}')`;
+            
             showView('view-camera');
             startCamera();
         });
