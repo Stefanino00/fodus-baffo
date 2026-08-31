@@ -19,7 +19,6 @@ document.getElementById('btn-login').addEventListener('click', async () => {
     else { document.getElementById('login-error').innerText = "PIN errato"; }
 });
 
-// STATUS & HOME DASHBOARD
 async function checkStatus() {
     const res = await fetch('/api/status');
     if (!res.ok) return showView('view-login');
@@ -42,14 +41,18 @@ async function checkStatus() {
     else if (s.days_remaining <= 31) pill.style.backgroundColor = 'var(--color-medium)';
     else pill.style.backgroundColor = 'var(--color-safe)';
 
+    // BYPASS PREVIEW SEGRETAMENTE (Il pezzo che mancava!)
+    const urlParams = new URLSearchParams(window.location.search);
+    const isPreview = urlParams.get('preview') === '1' && currentUser.is_admin;
+
     const actionCard = document.getElementById('home-action-card');
     
-    // Se la sfida non è iniziata
-    if (!status.sfida_iniziata) {
+    // Se la sfida non è iniziata (e non sei in modalità preview)
+    if (!status.sfida_iniziata && !isPreview) {
         actionCard.innerHTML = `<h3>In attesa... ⏳</h3><p class="stat-desc">Stefano deve sbloccare la sfida.</p>`;
         if (currentUser.is_admin) document.getElementById('admin-controls').classList.remove('hidden');
     } 
-    // Se la sfida è iniziata e HA già fatto la foto
+    // Se la sfida è iniziata (o sei in preview) e HA già fatto la foto
     else if (status.has_photo_today) {
         actionCard.innerHTML = `<h3>Grande! 🎉</h3><p class="stat-desc">Hai già fatto la tua foto oggi.</p>`;
     } 
