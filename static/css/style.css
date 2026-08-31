@@ -1,19 +1,23 @@
 :root {
-    --bg-color: #12121a; /* Blu notte molto scuro, meno cupo del nero puro */
-    --card-bg: #1e1e28;
-    --accent: #f59e0b; /* Amber 500 */
-    --accent-hover: #d97706;
-    --accent-glow: rgba(245, 158, 11, 0.3);
-    --text-main: #f8f9fa;
-    --text-muted: #a1a1aa;
-    --border-color: #2a2a35;
+    --bg-color: #F8F9FA; /* Bianco panna modernissimo */
+    --card-bg: #FFFFFF;
+    --primary: #3B82F6; /* Light Blue */
+    --primary-hover: #2563EB;
+    --text-main: #1E293B; /* Slate 800 (Grigio scuro, non nero) */
+    --text-muted: #64748B; /* Slate 500 */
+    --border-color: #E2E8F0;
+    
+    /* Colori Countdown */
+    --color-safe: #3B82F6;
+    --color-medium: #F59E0B;
+    --color-danger: #EF4444;
 }
 
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -22,9 +26,7 @@ body {
     color: var(--text-main);
     display: flex;
     justify-content: center;
-    align-items: center;
     min-height: 100vh;
-    overflow-x: hidden;
 }
 
 .app-container {
@@ -33,85 +35,81 @@ body {
     height: 100vh;
     display: flex;
     flex-direction: column;
-    padding: 16px;
+    padding: 20px;
 }
 
 .app-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 0;
-    border-bottom: 1px solid var(--border-color);
-    margin-bottom: 10px;
+    padding-bottom: 20px;
 }
 
 .app-header h1 {
-    font-size: 1.4rem;
-    font-weight: 900;
-    letter-spacing: -0.5px;
-    /* Gradiente sul testo per un tocco premium */
-    background: linear-gradient(90deg, #f59e0b, #facc15);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--text-main);
 }
 
 .countdown-badge {
-    background: rgba(245, 158, 11, 0.15);
-    border: 1px solid rgba(245, 158, 11, 0.4);
     padding: 6px 12px;
     border-radius: 20px;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 700;
-    color: var(--accent);
-    box-shadow: 0 0 10px var(--accent-glow);
+    color: #fff;
+    background-color: var(--color-safe);
+    transition: background-color 0.3s;
 }
 
 .view {
     display: none;
     flex: 1;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    animation: fadeIn 0.4s ease-out forwards;
+    animation: fadeIn 0.3s ease-out;
 }
+
+.view.active { display: flex; }
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-.view.active {
-    display: flex;
-}
-
-.card {
+/* CARDS */
+.card, .stat-card, .action-card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    padding: 32px 24px;
-    border-radius: 24px;
-    width: 100%;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    padding: 24px;
     text-align: center;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
-.card h2 {
-    font-size: 1.5rem;
-    margin-bottom: 8px;
-    color: var(--text-main);
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
 }
 
-.subtitle {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    margin-bottom: 24px;
-    line-height: 1.4;
+.stat-card { padding: 16px; }
+.stat-title { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-value { font-size: 1.6rem; font-weight: 800; color: var(--primary); margin: 4px 0; }
+.stat-desc { font-size: 0.75rem; color: var(--text-muted); }
+
+.action-card {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
 }
 
+/* FORMS & BUTTONS */
 input {
     width: 100%;
     padding: 16px;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--bg-color);
     border: 2px solid var(--border-color);
     color: var(--text-main);
     border-radius: 16px;
@@ -119,13 +117,8 @@ input {
     text-align: center;
     margin-bottom: 16px;
     outline: none;
-    transition: all 0.3s ease;
 }
-
-input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 4px var(--accent-glow);
-}
+input:focus { border-color: var(--primary); }
 
 .btn-primary, .btn-secondary, .btn-admin {
     width: 100%;
@@ -135,34 +128,17 @@ input:focus {
     font-weight: 700;
     font-size: 1.05rem;
     cursor: pointer;
-    transition: all 0.2s ease;
 }
 
-.btn-primary { 
-    background: var(--accent); 
-    color: #000; 
-    box-shadow: 0 4px 15px var(--accent-glow);
-}
-.btn-primary:active { transform: scale(0.97); background: var(--accent-hover); }
+.btn-primary { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+.btn-secondary { background: var(--card-bg); color: var(--primary); border: 2px solid var(--primary); }
+.btn-admin { background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; }
+.btn-text-only { background: none; border: none; color: var(--text-muted); font-weight: 600; cursor: pointer; padding: 10px; }
 
-.btn-secondary { 
-    background: transparent; 
-    color: var(--text-main); 
-    border: 2px solid var(--border-color); 
-}
-.btn-secondary:active { background: rgba(255, 255, 255, 0.05); transform: scale(0.97); }
-
-.btn-admin { 
-    background: rgba(239, 68, 68, 0.1); 
-    color: #ef4444; 
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    margin-top: 16px; 
-}
-
-.error-msg { color: #ef4444; font-size: 0.9rem; margin-top: 12px; font-weight: 500; }
+.mt-3 { margin-top: 16px; }
 .hidden { display: none !important; }
 
-/* CAMERA STYLES (9:16) */
+/* CAMERA (FIXED ZOOM & MIRROR) */
 .camera-wrapper {
     position: relative;
     width: 100%;
@@ -170,139 +146,44 @@ input:focus {
     background: #000;
     border-radius: 24px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
 
 #camera-stream, #camera-canvas {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    /* Rimosso object-fit cover per evitare lo zoom nativo. Lo gestiamo via JS! */
+}
+
+/* L'effetto specchio sul video in tempo reale */
+#camera-stream {
+    transform: scaleX(-1);
 }
 
 .ghost-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
     pointer-events: none;
-    opacity: 0.4;
+    opacity: 0.3;
     background-size: cover;
     background-position: center;
-    mix-blend-mode: screen; /* Fonde meglio il fantasma con l'immagine reale */
 }
 
-.camera-actions {
-    margin-top: 24px;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-}
-
+.camera-actions { margin-top: 24px; display: flex; justify-content: center; width: 100%; }
 .btn-shutter {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    border: 6px solid var(--text-main);
-    background: transparent;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
-}
-.btn-shutter:active {
-    background: var(--text-main);
-    transform: scale(0.9);
+    width: 76px; height: 76px; border-radius: 50%;
+    border: 6px solid var(--bg-color); background: var(--primary);
+    box-shadow: 0 0 0 4px var(--primary); cursor: pointer;
 }
 
-#retake-actions {
-    display: flex;
-    gap: 12px;
-    width: 100%;
-}
+#retake-actions { display: flex; gap: 12px; width: 100%; }
 
-/* FEED STYLES */
-.feed-header {
-    width: 100%;
-    margin-bottom: 16px;
-}
-
-.feed-list {
-    width: 100%;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    padding-bottom: 40px;
-}
-
-.feed-item {
-    background: var(--card-bg);
-    border-radius: 20px;
-    overflow: hidden;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-}
-
-.feed-user-info {
-    padding: 16px;
-    font-weight: 700;
-    font-size: 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.feed-time { 
-    color: var(--text-muted); 
-    font-size: 0.85rem; 
-    font-weight: 500; 
-}
-
-.feed-img {
-    width: 100%;
-    aspect-ratio: 9/16;
-    object-fit: cover;
-    border-top: 1px solid var(--border-color);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.feed-comments {
-    padding: 16px;
-}
-
-.comment-tag {
-    display: inline-block;
-    background: rgba(255, 255, 255, 0.05);
-    padding: 6px 10px;
-    border-radius: 10px;
-    font-size: 0.85rem;
-    margin-right: 8px;
-    margin-bottom: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.comment-tag span { 
-    color: var(--accent); 
-    font-size: 0.8rem; 
-    font-weight: 700;
-    margin-right: 4px;
-}
-
-.comment-input-box {
-    display: flex;
-    gap: 8px;
-    margin-top: 12px;
-}
-
-.comment-input-box input {
-    margin-bottom: 0;
-    padding: 12px 16px;
-    font-size: 0.9rem;
-    text-align: left;
-    border-radius: 12px;
-}
-
-.comment-input-box button {
-    width: auto;
-    padding: 12px 20px;
-    border-radius: 12px;
-    font-size: 1.2rem;
-}
+/* CALENDARIO */
+.section-title { margin-bottom: 20px; font-size: 1.4rem; font-weight: 800; }
+.calendar-list { overflow-y: auto; display: flex; flex-direction: column; gap: 24px; padding-bottom: 20px; }
+.day-group { background: var(--card-bg); border-radius: 16px; padding: 16px; border: 1px solid var(--border-color); }
+.day-title { font-size: 1.1rem; font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 12px; color: var(--primary); }
+.photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.photo-item { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 9/16; }
+.photo-item img { width: 100%; height: 100%; object-fit: cover; }
+.photo-author { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: #fff; padding: 6px; font-size: 0.75rem; font-weight: 600; text-align: center; }
