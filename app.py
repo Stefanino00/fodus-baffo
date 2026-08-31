@@ -69,34 +69,7 @@ def set_soprannome():
     db.session.commit()
     return jsonify({'success': True, 'soprannome': user.soprannome})
 
-@app.route('/api/status', methods=['GET'])
-def get_status():
-    user_id = session.get('user_id')
-    if not user_id:
-        return jsonify({'error': 'Non autorizzato'}), 401
-    
-    user = User.query.get(user_id)
-    settings = Settings.query.first()
-    today = datetime.utcnow().date()
-    
-    # Foto dell'utente di oggi
-    has_photo_today = Photo.query.filter_by(user_id=user.id, date_created=today).first() is not None
-    
-    # Ultima foto scattata dall'utente per la sovraimpressione (ghost)
-    last_photo = Photo.query.filter_by(user_id=user.id).order_by(Photo.id.desc()).first()
-    ghost_url = f"/static/uploads/{last_photo.filename}" if last_photo else None
 
-    return jsonify({
-        'user': {
-            'id': user.id,
-            'nome': user.nome,
-            'soprannome': user.soprannome,
-            'is_admin': user.is_admin
-        },
-        'sfida_iniziata': settings.sfida_iniziata if settings else False,
-        'has_photo_today': has_photo_today,
-        'ghost_url': ghost_url
-    })
 
 @app.route('/api/admin/start-challenge', methods=['POST'])
 def start_challenge():
@@ -142,27 +115,68 @@ def upload_photo():
     
     return jsonify({'success': True})
 
-@app.route('/api/feed', methods=['GET'])
-def get_feed():
-    today = datetime.utcnow().date()
-    photos = Photo.query.filter_by(date_created=today).order_by(Photo.timestamp.desc()).all()
+@app.route('/api/status', methods=['GET'])
+def get_status():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Non autorizzato'}), 401
     
-    feed_data = []
+    user = User.query.get(user_id)
+    settings = Settings.query.first()
+    today = datetime.utcnow().date()
+    
+    # Statistiche Home Page
+    total_users = User.query.count()
+    photos_today_count = Photo.query.filter_by(date_created=today).count()
+    has_photo_today = Photo.query.filter_by(user_id=user.id, date_created=today).first() is not None
+    
+    last_photo = Photo.query.filter_by(user_id=user.id).order_by(Photo.id.desc()).first()
+    ghost_url = f"/static/uploads/{last_photo.filename}" if last_photo else None
+
+    # Calcolo Giorni (Dal 1 Settembre al 24 Dicembre sono 115 giorni)
+    start_date = date(2026, 9, 1)
+    end_date = date(2026, 12, 24)
+    total_days = (end_date - start_date).days
+    days_passed = (today - start_date).days
+    days_remaining = (end_date - today).days
+
+    return jsonify({
+        'user': {
+            'id': user.id,
+            'nome': user.nome,
+            'soprannome': user.soprannome,
+            'is_admin': user.is_admin
+        },
+        'sfida_iniziata': settings.sfida_iniziata if settings else False,
+        'has_photo_today': has_photo_today,
+        'ghost_url': ghost_url,
+        'stats': {
+            'total_users': total_users,
+            'photos_today': photos_today_count,
+            'days_passed': max(0, days_passed),
+            'total_days': total_days,
+            'days_remaining': max(0, days_remaining)
+        }
+    })
+
+@app.route('/api/calendar', methods=['GET'])
+def get_calendar():
+    photos = Photo.query.order_by(Photo.timestamp.desc()).all()
+    calendar_data = {}
+    
     for p in photos:
-        comments = [{
-            'id': c.id,
-            'word': c.word,
-            'author': c.author.soprannome or c.author.nome
-        } for c in p.comments]
-        
-        feed_data.append({
+        date_str = p.date_created.strftime('%d/%m/%Y')
+        if date_str not in calendar_data:
+            calendar_data[date_str] = []
+            
+        calendar_data[date_str].append({
             'photo_id': p.id,
             'author_name': p.author.soprannome or p.author.nome,
             'url': f"/static/uploads/{p.filename}",
-            'time': p.timestamp.strftime('%H:%M'),
-            'comments': comments
+            'time': p.timestamp.strftime('%H:%M')
         })
-    return jsonify(feed_data)
+    
+    return jsonify(calendar_data)
 
 @app.route('/api/comment', methods=['POST'])
 def add_comment():
