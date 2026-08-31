@@ -1,0 +1,14 @@
+# Ambiente virtuale e cache Python
+venv/
+__pycache__/
+*.pyc
+
+# Database SQLite (NON va caricato, ognuno ha il suo locale/server)
+baffo.db
+
+# Foto degli utenti (il server deve tenerle per sé)
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Chiavi segrete
+.env
