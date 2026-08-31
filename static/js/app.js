@@ -89,6 +89,7 @@ document.getElementById('btn-save-nickname').addEventListener('click', async () 
     if (res.ok) checkStatus();
 });
 
+// FIX ZOOM: Avvia la fotocamera lasciando che il browser scelga la risoluzione nativa più vicina a 9:16
 async function startCamera() {
     try {
         stream = await navigator.mediaDevices.getUserMedia({ 
@@ -100,16 +101,23 @@ async function startCamera() {
         });
         const video = document.getElementById('camera-stream');
         video.srcObject = stream;
-        
-        // DEBUG temporaneo: controlla cosa restituisce davvero il device
-        video.onloadedmetadata = () => {
-            console.log('Video reale:', video.videoWidth, 'x', video.videoHeight);
-        };
-        
         video.classList.remove('hidden');
         document.getElementById('camera-canvas').classList.add('hidden');
         document.getElementById('btn-capture').classList.remove('hidden');
         document.getElementById('retake-actions').classList.add('hidden');
+
+        // DEBUG TEMPORANEO: mostra la risoluzione reale della fotocamera sullo schermo
+        video.onloadedmetadata = () => {
+            let debugBox = document.getElementById('debug-res');
+            if (!debugBox) {
+                debugBox = document.createElement('div');
+                debugBox.id = 'debug-res';
+                debugBox.style.cssText = 'position:fixed;top:10px;left:10px;background:red;color:white;padding:8px;z-index:99999;font-size:14px;border-radius:6px;';
+                document.body.appendChild(debugBox);
+            }
+            debugBox.innerText = `Video: ${video.videoWidth}x${video.videoHeight}`;
+        };
+
     } catch (err) {
         alert("Errore fotocamera. Controlla i permessi.");
     }
