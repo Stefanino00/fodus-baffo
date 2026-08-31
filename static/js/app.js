@@ -61,11 +61,13 @@ async function checkStatus() {
         actionCard.innerHTML = `<h3>Tocca a te! 📸</h3><button id="btn-go-camera" class="btn-primary">Scatta la foto di oggi</button>`;
         document.getElementById('btn-go-camera').addEventListener('click', () => {
             
-            // LA SAGOMA DI DEFAULT PER IL GIORNO 1
-            const defaultGhost = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 1280'%3E%3Cellipse cx='360' cy='500' rx='180' ry='240' fill='none' stroke='white' stroke-width='6' stroke-dasharray='15,15' opacity='0.7'/%3E%3Cpath d='M100,1280 C100,950 220,850 360,850 C500,850 620,950 620,1280' fill='none' stroke='white' stroke-width='6' stroke-dasharray='15,15' opacity='0.7'/%3E%3C/svg%3E";
+            // FIX FANTASMA: Convertito in Base64 per evitare errori del CSS con le virgolette
+            const defaultGhost = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3MjAgMTI4MCI+PGVsbGlwc2UgY3g9IjM2MCIgY3k9IjUwMCIgcng9IjE4MCIgcnk9IjI0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI4IiBzdHJva2UtZGFzaGFycmF5PSIxNSwxNSIgb3BhY2l0eT0iMC44Ii8+PHBhdGggZD0iTTEwMCwxMjgwIEMxMDAsOTUwIDIyMCw4NTAgMzYwLDg1MCBDNTAwLDg1MCA2MjAsOTUwIDYyMCwxMjgwIiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjgiIHN0cm9rZS1kYXNoYXJyYXk9IjE1LDE1IiBvcGFjaXR5PSIwLjgiLz48L3N2Zz4=";
             
-            // Usa la foto di ieri, o la sagoma di default se è il giorno 1
-            document.getElementById('ghost-overlay').style.backgroundImage = `url('${status.ghost_url || defaultGhost}')`;
+            const finalGhost = status.ghost_url ? status.ghost_url : defaultGhost;
+            
+            // Usiamo i doppi apici per proteggere l'url
+            document.getElementById('ghost-overlay').style.backgroundImage = `url("${finalGhost}")`;
             
             showView('view-camera');
             startCamera();
