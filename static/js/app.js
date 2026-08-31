@@ -2,21 +2,12 @@ let currentUser = null;
 let stream = null;
 let capturedBase64 = null;
 
-// Calcolo Countdown al 24 Dicembre 2026
-function updateCountdown() {
-    const target = new Date('2026-12-24T23:59:59');
-    const now = new Date();
-    const diffDays = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
-    document.getElementById('countdown').innerText = `${diffDays} gg al 24 Dic`;
-}
-updateCountdown();
-
 function showView(viewId) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.getElementById(viewId).classList.add('active');
 }
 
-// LOGIN WITH PIN
+// LOGIN
 document.getElementById('btn-login').addEventListener('click', async () => {
     const pin = document.getElementById('pin-input').value;
     const res = await fetch('/api/login', {
@@ -24,15 +15,11 @@ document.getElementById('btn-login').addEventListener('click', async () => {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({pin})
     });
-    
-    if (res.ok) {
-        currentUser = await res.json();
-        checkStatus();
-    } else {
-        document.getElementById('login-error').innerText = "PIN non valido";
-    }
+    if (res.ok) { currentUser = await res.json(); checkStatus(); } 
+    else { document.getElementById('login-error').innerText = "PIN errato"; }
 });
 
+// STATUS & HOME DASHBOARD
 async function checkStatus() {
     const res = await fetch('/api/status');
     if (!res.ok) return showView('view-login');
@@ -40,78 +27,106 @@ async function checkStatus() {
     const status = await res.json();
     currentUser = status.user;
 
-    // 1. Se non ha il soprannome -> Onboarding
-    if (!currentUser.soprannome) {
-        return showView('view-onboarding');
+    if (!currentUser.soprannome) return showView('view-onboarding');
+
+    // Popola Home Page
+    const s = status.stats;
+    document.getElementById('stat-photos-today').innerText = `${s.photos_today}/${s.total_users}`;
+    document.getElementById('stat-days-passed').innerText = `Giorno ${s.days_passed}`;
+    
+    // Gestione Colore Countdown
+    const pill = document.getElementById('countdown-pill');
+    pill.innerText = `${s.days_remaining} gg a Natale`;
+    
+    if (s.days_remaining <= 15) pill.style.backgroundColor = 'var(--color-danger)';
+    else if (s.days_remaining <= 31) pill.style.backgroundColor = 'var(--color-medium)';
+    else pill.style.backgroundColor = 'var(--color-safe)';
+
+    const actionCard = document.getElementById('home-action-card');
+    
+    // Se la sfida non è iniziata
+    if (!status.sfida_iniziata) {
+        actionCard.innerHTML = `<h3>In attesa... ⏳</h3><p class="stat-desc">Stefano deve sbloccare la sfida.</p>`;
+        if (currentUser.is_admin) document.getElementById('admin-controls').classList.remove('hidden');
+    } 
+    // Se la sfida è iniziata e HA già fatto la foto
+    else if (status.has_photo_today) {
+        actionCard.innerHTML = `<h3>Grande! 🎉</h3><p class="stat-desc">Hai già fatto la tua foto oggi.</p>`;
+    } 
+    // Se NON ha ancora fatto la foto
+    else {
+        actionCard.innerHTML = `<h3>Tocca a te! 📸</h3><button id="btn-go-camera" class="btn-primary">Scatta la foto di oggi</button>`;
+        document.getElementById('btn-go-camera').addEventListener('click', () => {
+            if (status.ghost_url) document.getElementById('ghost-overlay').style.backgroundImage = `url('${status.ghost_url}')`;
+            showView('view-camera');
+            startCamera();
+        });
     }
 
-    // --- AGGIUNTA PROATTIVA: Bypass per Preview ---
-    const urlParams = new URLSearchParams(window.location.search);
-    const isPreview = urlParams.get('preview') === '1' && currentUser.is_admin;
-
-    // 2. Se la sfida non è sbloccata (e non sei in preview)
-    if (!status.sfida_iniziata && !isPreview) {
-        if (currentUser.is_admin) {
-            document.getElementById('admin-controls').classList.remove('hidden');
-        }
-        return showView('view-waiting');
-    }
-
-    // 3. Se ha già fatto la foto oggi -> Feed
-    if (status.has_photo_today) {
-        loadFeed();
-        return showView('view-feed');
-    }
-
-    // 4. Altrimenti -> Apri Fotocamera
-    if (status.ghost_url) {
-        document.getElementById('ghost-overlay').style.backgroundImage = `url('${status.ghost_url}')`;
-    }
-    showView('view-camera');
-    startCamera();
+    showView('view-home');
 }
-
-// ONBOARDING
-document.getElementById('btn-save-nickname').addEventListener('click', async () => {
-    const soprannome = document.getElementById('nickname-input').value;
-    const res = await fetch('/api/set-soprannome', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({soprannome})
-    });
-    if (res.ok) checkStatus();
-});
 
 // ADMIN UNLOCK
 document.getElementById('btn-unlock-challenge')?.addEventListener('click', async () => {
-    const res = await fetch('/api/admin/start-challenge', {method: 'POST'});
+    await fetch('/api/admin/start-challenge', {method: 'POST'});
+    checkStatus();
+});
+
+document.getElementById('btn-save-nickname').addEventListener('click', async () => {
+    const soprannome = document.getElementById('nickname-input').value;
+    const res = await fetch('/api/set-soprannome', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({soprannome}) });
     if (res.ok) checkStatus();
 });
 
-// CAMERA & CANVAS COMPRESSION
+// FIX: CAMERA START SENZA ZOOM
 async function startCamera() {
     try {
-        stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "user", aspectRatio: 9/16 },
-            audio: false
-        });
-        document.getElementById('camera-stream').srcObject = stream;
+        // Richiediamo solo la frontale senza forzare aspectRatio, così il telefono usa tutto il sensore
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+        const video = document.getElementById('camera-stream');
+        video.srcObject = stream;
+        video.classList.remove('hidden');
+        document.getElementById('camera-canvas').classList.add('hidden');
+        document.getElementById('btn-capture').classList.remove('hidden');
+        document.getElementById('retake-actions').classList.add('hidden');
     } catch (err) {
-        alert("Impossibile accedere alla fotocamera. Assicurati di dare i permessi.");
+        alert("Errore fotocamera. Controlla i permessi.");
     }
 }
 
-// SHUTTER & RETAKE
+// FIX: TAGLIO 9:16 E SPECCHIO PERFETTO
 document.getElementById('btn-capture').addEventListener('click', () => {
     const video = document.getElementById('camera-stream');
     const canvas = document.getElementById('camera-canvas');
     const ctx = canvas.getContext('2d');
 
+    // Dimensioni finali target (9:16)
     canvas.width = 720;
-    canvas.height = 1280; // Forzato 9:16 HD
+    canvas.height = 1280; 
 
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    capturedBase64 = canvas.toDataURL('image/webp', 0.8); // Compressione WebP 80%
+    // Calcolo per il crop centrale (evita lo zoom)
+    const videoRatio = video.videoWidth / video.videoHeight;
+    const targetRatio = 9 / 16;
+    let sWidth = video.videoWidth;
+    let sHeight = video.videoHeight;
+    let sx = 0; let sy = 0;
+
+    if (videoRatio > targetRatio) {
+        sWidth = sHeight * targetRatio;
+        sx = (video.videoWidth - sWidth) / 2;
+    } else {
+        sHeight = sWidth / targetRatio;
+        sy = (video.videoHeight - sHeight) / 2;
+    }
+
+    // Applica l'effetto specchio anche sul canvas finale
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    
+    // Disegna ritagliando il centro perfetto
+    ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
+
+    capturedBase64 = canvas.toDataURL('image/webp', 0.8); 
 
     video.classList.add('hidden');
     canvas.classList.remove('hidden');
@@ -119,75 +134,39 @@ document.getElementById('btn-capture').addEventListener('click', () => {
     document.getElementById('retake-actions').classList.remove('hidden');
 });
 
-document.getElementById('btn-retake').addEventListener('click', () => {
-    document.getElementById('camera-stream').classList.remove('hidden');
-    document.getElementById('camera-canvas').classList.add('hidden');
-    document.getElementById('btn-capture').classList.remove('hidden');
-    document.getElementById('retake-actions').classList.add('hidden');
-});
+document.getElementById('btn-retake').addEventListener('click', startCamera);
 
 document.getElementById('btn-upload').addEventListener('click', async () => {
-    const res = await fetch('/api/upload-photo', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({image: capturedBase64})
-    });
+    const res = await fetch('/api/upload-photo', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({image: capturedBase64}) });
     if (res.ok) {
         if (stream) stream.getTracks().forEach(track => track.stop());
         checkStatus();
     }
 });
 
-// FEED & 1-WORD COMMENTS
-async function loadFeed() {
-    const res = await fetch('/api/feed');
+// CALENDARIO
+document.getElementById('btn-open-calendar').addEventListener('click', async () => {
+    const res = await fetch('/api/calendar');
     const data = await res.json();
-    const container = document.getElementById('feed-container');
+    const container = document.getElementById('calendar-container');
     container.innerHTML = '';
 
-    data.forEach(item => {
-        const commentsHtml = item.comments.map(c => 
-            `<div class="comment-tag"><span>${c.author}:</span> ${c.word}</div>`
-        ).join('');
-
-        const card = document.createElement('div');
-        card.className = 'feed-item';
-        card.innerHTML = `
-            <div class="feed-user-info">
-                <span>${item.author_name}</span>
-                <span class="feed-time">${item.time}</span>
+    for (const [date, photos] of Object.entries(data)) {
+        const photosHtml = photos.map(p => `
+            <div class="photo-item">
+                <img src="${p.url}">
+                <div class="photo-author">${p.author_name} - ${p.time}</div>
             </div>
-            <img src="${item.url}" class="feed-img">
-            <div class="feed-comments">
-                <div id="comments-list-${item.photo_id}">${commentsHtml}</div>
-                <div class="comment-input-box">
-                    <input type="text" id="comment-input-${item.photo_id}" placeholder="Una parola..." maxlength="20">
-                    <button class="btn-primary" onclick="sendComment(${item.photo_id})">💬</button>
-                </div>
+        `).join('');
+
+        container.innerHTML += `
+            <div class="day-group">
+                <div class="day-title">${date}</div>
+                <div class="photo-grid">${photosHtml}</div>
             </div>
         `;
-        container.appendChild(card);
-    });
-}
-
-async function sendComment(photoId) {
-    const input = document.getElementById(`comment-input-${photoId}`);
-    const word = input.value.trim();
-    if (!word || word.includes(' ')) {
-        return alert("Puoi inserire una sola parola (senza spazi)!");
     }
+    showView('view-calendar');
+});
 
-    const res = await fetch('/api/comment', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({photo_id: photoId, word})
-    });
-
-    if (res.ok) {
-        input.value = '';
-        loadFeed();
-    } else {
-        const err = await res.json();
-        alert(err.error || "Errore durante l'invio");
-    }
-}
+checkStatus();
