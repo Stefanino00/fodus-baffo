@@ -122,38 +122,23 @@ async function startCamera() {
         alert("Errore fotocamera. Controlla i permessi.");
     }
 }
-// FIX: TAGLIO 9:16 E SPECCHIO PERFETTO + EFFETTO FLASH
+// FIX: Nessun ritaglio manuale — cattura il frame intero, il crop lo fa sempre il CSS (object-fit: cover)
 document.getElementById('btn-capture').addEventListener('click', () => {
     const video = document.getElementById('camera-stream');
     const canvas = document.getElementById('camera-canvas');
     const ctx = canvas.getContext('2d');
     const flash = document.getElementById('screen-flash');
 
-    // 1. Attiva il Flash istantaneamente
     flash.classList.add('flash-active');
 
-    // 2. Ritardiamo lo scatto di 150ms per far sì che la luce bianca illumini il volto
     setTimeout(() => {
-        canvas.width = 720;
-        canvas.height = 1280; 
-
-        const videoRatio = video.videoWidth / video.videoHeight;
-        const targetRatio = 9 / 16;
-        let sWidth = video.videoWidth;
-        let sHeight = video.videoHeight;
-        let sx = 0; let sy = 0;
-
-        if (videoRatio > targetRatio) {
-            sWidth = sHeight * targetRatio;
-            sx = (video.videoWidth - sWidth) / 2;
-        } else {
-            sHeight = sWidth / targetRatio;
-            sy = (video.videoHeight - sHeight) / 2;
-        }
+        // Usa le dimensioni REALI del video così come sono, senza forzare 720x1280
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
 
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
-        ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
         capturedBase64 = canvas.toDataURL('image/webp', 0.8); 
 
@@ -162,10 +147,9 @@ document.getElementById('btn-capture').addEventListener('click', () => {
         document.getElementById('btn-capture').classList.add('hidden');
         document.getElementById('retake-actions').classList.remove('hidden');
 
-        // 3. Spegne il flash facendolo sfumare dolcemente
         flash.classList.remove('flash-active');
         
-    }, 150); // Attesa di 150 millisecondi
+    }, 150);
 });
 
 document.getElementById('btn-retake').addEventListener('click', startCamera);
