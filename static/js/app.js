@@ -89,11 +89,17 @@ document.getElementById('btn-save-nickname').addEventListener('click', async () 
     if (res.ok) checkStatus();
 });
 
-// FIX: CAMERA START SENZA ZOOM
+// FIX ZOOM: Avvia la fotocamera forzandola in verticale (Portrait HD)
 async function startCamera() {
     try {
-        // Richiediamo solo la frontale senza forzare aspectRatio, così il telefono usa tutto il sensore
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+        stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                facingMode: "user",
+                width: { ideal: 720 },
+                height: { ideal: 1280 } 
+            }, 
+            audio: false 
+        });
         const video = document.getElementById('camera-stream');
         video.srcObject = stream;
         video.classList.remove('hidden');
@@ -104,7 +110,6 @@ async function startCamera() {
         alert("Errore fotocamera. Controlla i permessi.");
     }
 }
-
 // FIX: TAGLIO 9:16 E SPECCHIO PERFETTO + EFFETTO FLASH
 document.getElementById('btn-capture').addEventListener('click', () => {
     const video = document.getElementById('camera-stream');
