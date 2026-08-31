@@ -400,3 +400,25 @@ input::placeholder { color: #C7C7CC; font-weight: 400; }
     text-align: center; 
     text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
+
+
+/* =========================================
+   EFFETTO RETINA FLASH
+   ========================================= */
+#screen-flash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #FFFFFF;
+    z-index: 9999; /* Deve stare sopra a TUTTO */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-out; /* Dissolvenza in uscita morbida */
+}
+
+#screen-flash.flash-active {
+    opacity: 1;
+    transition: none; /* Appare all'istante, senza transizioni */
+}
