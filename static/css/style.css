@@ -1,189 +1,375 @@
+/* =========================================
+   FODUS BAFFO - PREMIUM UI/UX 
+   ========================================= */
+
 :root {
-    --bg-color: #F8F9FA; /* Bianco panna modernissimo */
-    --card-bg: #FFFFFF;
-    --primary: #3B82F6; /* Light Blue */
-    --primary-hover: #2563EB;
-    --text-main: #1E293B; /* Slate 800 (Grigio scuro, non nero) */
-    --text-muted: #64748B; /* Slate 500 */
-    --border-color: #E2E8F0;
+    /* Palette Colori */
+    --bg-panna: #FDFBF7; /* Bianco panna caldo e premium */
+    --surface: #FFFFFF;
+    
+    --primary: #007AFF; /* Apple Light Blue */
+    --primary-hover: #005ce6;
+    --primary-light: rgba(0, 122, 255, 0.1);
+    
+    --accent: #FF6B6B; /* Arancione Corallo */
+    --accent-light: rgba(255, 107, 107, 0.15);
+    
+    --text-main: #1C1C1E; /* Quasi nero, molto leggibile */
+    --text-muted: #8E8E93;
+    
+    --border-soft: rgba(0, 0, 0, 0.05);
     
     /* Colori Countdown */
-    --color-safe: #3B82F6;
-    --color-medium: #F59E0B;
-    --color-danger: #EF4444;
+    --color-safe: #34C759; /* Verde iOS */
+    --color-medium: #FF9500; /* Arancio iOS */
+    --color-danger: #FF3B30; /* Rosso iOS */
+    
+    /* Ombre Soft-UI */
+    --shadow-card: 0 12px 32px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.02);
+    --shadow-btn: 0 8px 20px rgba(0, 122, 255, 0.25);
 }
 
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: 'Space Grotesk', -apple-system, sans-serif;
     -webkit-tap-highlight-color: transparent;
 }
 
 body {
-    background-color: var(--bg-color);
+    background-color: var(--bg-panna);
     color: var(--text-main);
     display: flex;
     justify-content: center;
     min-height: 100vh;
+    /* Previene lo "scrolling elastico" su iOS che mostra lo sfondo bianco dietro */
+    overscroll-behavior-y: none; 
 }
 
 .app-container {
     width: 100%;
     max-width: 420px;
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    padding: 20px;
+    position: relative;
+    padding: 0 20px 20px 20px;
 }
 
+/* =========================================
+   HEADER GLASSMORPHISM
+   ========================================= */
 .app-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 20px;
+    padding: 16px 20px;
+    margin: 0 -20px 20px -20px; /* Estende ai bordi */
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    /* Effetto vetro sfocato iOS */
+    background: rgba(253, 251, 247, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-soft);
 }
 
 .app-header h1 {
-    font-size: 1.2rem;
-    font-weight: 800;
-    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 1.35rem;
+    letter-spacing: -0.5px;
 }
+
+.title-fodus { font-weight: 800; color: var(--primary); }
+.title-baffo { font-weight: 300; color: var(--accent); }
 
 .countdown-badge {
-    padding: 6px 12px;
+    padding: 6px 14px;
     border-radius: 20px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 700;
+    letter-spacing: 0.5px;
     color: #fff;
     background-color: var(--color-safe);
-    transition: background-color 0.3s;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
 }
 
+/* =========================================
+   VIEWS & ANIMAZIONI
+   ========================================= */
 .view {
     display: none;
     flex: 1;
     flex-direction: column;
-    animation: fadeIn 0.3s ease-out;
+    animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .view.active { display: flex; }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* CARDS */
+/* =========================================
+   CARDS & DASHBOARD
+   ========================================= */
 .card, .stat-card, .action-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 24px;
+    box-shadow: var(--shadow-card);
+    padding: 28px 24px;
     text-align: center;
+    transition: transform 0.2s ease;
 }
 
 .dashboard-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 20px;
+    gap: 16px;
+    margin-bottom: 24px;
 }
 
-.stat-card { padding: 16px; }
-.stat-title { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-.stat-value { font-size: 1.6rem; font-weight: 800; color: var(--primary); margin: 4px 0; }
-.stat-desc { font-size: 0.75rem; color: var(--text-muted); }
+.stat-card {
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.stat-title { 
+    font-size: 0.75rem; 
+    color: var(--text-muted); 
+    text-transform: uppercase; 
+    letter-spacing: 1px; 
+    font-weight: 600;
+}
+
+.stat-value { 
+    font-size: 1.8rem; 
+    font-weight: 800; 
+    color: var(--primary); 
+    margin: 8px 0; 
+    line-height: 1;
+}
+
+.stat-desc { font-size: 0.8rem; color: var(--text-muted); font-weight: 500;}
 
 .action-card {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
+    padding: 32px 20px;
 }
 
-/* FORMS & BUTTONS */
+.action-card h3 { font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
+
+/* =========================================
+   INPUTS & BUTTONS INTERATTIVI
+   ========================================= */
 input {
     width: 100%;
-    padding: 16px;
-    background: var(--bg-color);
-    border: 2px solid var(--border-color);
+    padding: 18px;
+    background: var(--bg-panna);
+    border: 2px solid transparent;
     color: var(--text-main);
     border-radius: 16px;
     font-size: 1.1rem;
     text-align: center;
-    margin-bottom: 16px;
+    font-weight: 500;
+    margin-bottom: 20px;
     outline: none;
+    transition: all 0.2s ease;
 }
-input:focus { border-color: var(--primary); }
+
+input:focus { 
+    border-color: var(--primary); 
+    background: var(--surface);
+    box-shadow: 0 0 0 4px var(--primary-light);
+}
+
+input::placeholder { color: #C7C7CC; font-weight: 400; }
 
 .btn-primary, .btn-secondary, .btn-admin {
     width: 100%;
-    padding: 16px;
+    padding: 18px;
     border-radius: 16px;
     border: none;
     font-weight: 700;
     font-size: 1.05rem;
     cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.btn-primary { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
-.btn-secondary { background: var(--card-bg); color: var(--primary); border: 2px solid var(--primary); }
-.btn-admin { background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; }
-.btn-text-only { background: none; border: none; color: var(--text-muted); font-weight: 600; cursor: pointer; padding: 10px; }
+.btn-primary { 
+    background: var(--primary); 
+    color: #fff; 
+    box-shadow: var(--shadow-btn); 
+}
+.btn-primary:active { transform: scale(0.96); box-shadow: 0 4px 10px rgba(0, 122, 255, 0.15); }
 
-.mt-3 { margin-top: 16px; }
+.btn-secondary { 
+    background: var(--primary-light); 
+    color: var(--primary); 
+}
+.btn-secondary:active { transform: scale(0.96); background: rgba(0, 122, 255, 0.15); }
+
+.btn-admin { 
+    background: #FFF0F0; 
+    color: var(--color-danger); 
+    margin-top: 10px; 
+}
+
+.btn-text-only { 
+    background: none; border: none; 
+    color: var(--text-muted); font-weight: 600; 
+    cursor: pointer; padding: 12px; margin-top: 16px;
+    transition: color 0.2s;
+}
+.btn-text-only:active { color: var(--text-main); }
+
+.error-msg { color: var(--color-danger); font-size: 0.9rem; margin-top: 12px; font-weight: 600; }
 .hidden { display: none !important; }
 
-/* CAMERA (FIXED ZOOM & MIRROR) */
+/* =========================================
+   CAMERA PREMIUM (Stile App Nativa)
+   ========================================= */
 .camera-wrapper {
     position: relative;
     width: 100%;
     aspect-ratio: 9/16;
     background: #000;
-    border-radius: 24px;
+    border-radius: 32px; /* Molto arrotondato come iPhone */
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
-#camera-stream, #camera-canvas {
-    width: 100%;
-    height: 100%;
-    /* Rimosso object-fit cover per evitare lo zoom nativo. Lo gestiamo via JS! */
-}
-
-/* L'effetto specchio sul video in tempo reale */
-#camera-stream {
-    transform: scaleX(-1);
-}
+#camera-stream { transform: scaleX(-1); }
 
 .ghost-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
     pointer-events: none;
-    opacity: 0.3;
+    opacity: 0.35;
     background-size: cover;
     background-position: center;
+    mix-blend-mode: screen; /* Fusione migliore della sagoma */
 }
 
-.camera-actions { margin-top: 24px; display: flex; justify-content: center; width: 100%; }
+.camera-actions { 
+    margin-top: 30px; 
+    display: flex; 
+    justify-content: center; 
+    width: 100%; 
+}
+
+/* Bottone Scatto - Replicato perfetto iOS */
 .btn-shutter {
-    width: 76px; height: 76px; border-radius: 50%;
-    border: 6px solid var(--bg-color); background: var(--primary);
-    box-shadow: 0 0 0 4px var(--primary); cursor: pointer;
+    width: 80px; height: 80px; 
+    border-radius: 50%;
+    border: 4px solid var(--accent); /* Richiamo Corallo */
+    background: #fff;
+    padding: 4px;
+    box-shadow: 0 8px 24px var(--accent-light);
+    position: relative;
+    cursor: pointer;
+    transition: all 0.15s ease;
 }
 
-#retake-actions { display: flex; gap: 12px; width: 100%; }
+.btn-shutter::after {
+    content: '';
+    display: block;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    transition: all 0.15s ease;
+}
 
-/* CALENDARIO */
-.section-title { margin-bottom: 20px; font-size: 1.4rem; font-weight: 800; }
-.calendar-list { overflow-y: auto; display: flex; flex-direction: column; gap: 24px; padding-bottom: 20px; }
-.day-group { background: var(--card-bg); border-radius: 16px; padding: 16px; border: 1px solid var(--border-color); }
-.day-title { font-size: 1.1rem; font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 12px; color: var(--primary); }
-.photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.photo-item { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 9/16; }
-.photo-item img { width: 100%; height: 100%; object-fit: cover; }
-.photo-author { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: #fff; padding: 6px; font-size: 0.75rem; font-weight: 600; text-align: center; }
+.btn-shutter:active::after {
+    transform: scale(0.85); /* Il cerchio interno si restringe al click */
+    background: #f0f0f0;
+}
+
+#retake-actions { 
+    display: flex; gap: 16px; width: 100%; 
+}
+
+/* =========================================
+   CALENDARIO & FEED
+   ========================================= */
+.section-title { 
+    margin-bottom: 24px; 
+    font-size: 1.6rem; 
+    font-weight: 800; 
+    letter-spacing: -0.5px;
+    color: var(--text-main);
+}
+
+.calendar-list { 
+    overflow-y: auto; 
+    display: flex; flex-direction: column; 
+    gap: 32px; padding-bottom: 20px; 
+}
+
+.day-group { 
+    background: transparent;
+}
+
+.day-title { 
+    font-size: 1.2rem; 
+    font-weight: 800; 
+    margin-bottom: 16px; 
+    color: var(--primary); 
+    display: flex;
+    align-items: center;
+}
+
+.day-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-soft);
+    margin-left: 12px;
+}
+
+.photo-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 16px; 
+}
+
+.photo-item { 
+    position: relative; 
+    border-radius: 20px; 
+    overflow: hidden; 
+    aspect-ratio: 9/16; 
+    box-shadow: var(--shadow-card);
+    background: var(--surface);
+}
+
+.photo-item img { 
+    width: 100%; height: 100%; 
+    object-fit: cover; 
+}
+
+.photo-author { 
+    position: absolute; 
+    bottom: 0; left: 0; right: 0; 
+    /* Sfumatura elegante dal basso */
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%); 
+    color: #fff; 
+    padding: 24px 12px 12px 12px; 
+    font-size: 0.85rem; 
+    font-weight: 600; 
+    text-align: center; 
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
