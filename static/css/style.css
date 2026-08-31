@@ -1,3 +1,14 @@
+:root {
+    --bg-color: #12121a; /* Blu notte molto scuro, meno cupo del nero puro */
+    --card-bg: #1e1e28;
+    --accent: #f59e0b; /* Amber 500 */
+    --accent-hover: #d97706;
+    --accent-glow: rgba(245, 158, 11, 0.3);
+    --text-main: #f8f9fa;
+    --text-muted: #a1a1aa;
+    --border-color: #2a2a35;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -7,8 +18,8 @@
 }
 
 body {
-    background-color: #000000;
-    color: #ffffff;
+    background-color: var(--bg-color);
+    color: var(--text-main);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -29,24 +40,30 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #222;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 10px;
 }
 
 .app-header h1 {
-    font-size: 1.2rem;
-    font-weight: 800;
-    letter-spacing: 1px;
+    font-size: 1.4rem;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    /* Gradiente sul testo per un tocco premium */
+    background: linear-gradient(90deg, #f59e0b, #facc15);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .countdown-badge {
-    background: #111;
-    border: 1px solid #333;
-    padding: 4px 10px;
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    padding: 6px 12px;
     border-radius: 20px;
     font-size: 0.75rem;
-    font-weight: 600;
-    color: #ffcc00;
+    font-weight: 700;
+    color: var(--accent);
+    box-shadow: 0 0 10px var(--accent-glow);
 }
 
 .view {
@@ -56,7 +73,12 @@ body {
     justify-content: center;
     align-items: center;
     width: 100%;
-    padding-top: 10px;
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .view.active {
@@ -64,63 +86,92 @@ body {
 }
 
 .card {
-    background: #111;
-    border: 1px solid #222;
-    padding: 24px;
-    border-radius: 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    padding: 32px 24px;
+    border-radius: 24px;
     width: 100%;
     text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
 .card h2 {
-    font-size: 1.4rem;
+    font-size: 1.5rem;
     margin-bottom: 8px;
+    color: var(--text-main);
 }
 
 .subtitle {
-    color: #888;
-    font-size: 0.85rem;
-    margin-bottom: 20px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+    line-height: 1.4;
 }
 
 input {
     width: 100%;
-    padding: 14px;
-    background: #222;
-    border: 1px solid #333;
-    color: #fff;
-    border-radius: 12px;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 2px solid var(--border-color);
+    color: var(--text-main);
+    border-radius: 16px;
     font-size: 1.1rem;
     text-align: center;
     margin-bottom: 16px;
     outline: none;
+    transition: all 0.3s ease;
+}
+
+input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-glow);
 }
 
 .btn-primary, .btn-secondary, .btn-admin {
     width: 100%;
-    padding: 14px;
-    border-radius: 12px;
+    padding: 16px;
+    border-radius: 16px;
     border: none;
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 1.05rem;
     cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.btn-primary { background: #ffffff; color: #000000; }
-.btn-secondary { background: #222222; color: #ffffff; border: 1px solid #444; }
-.btn-admin { background: #ff3b30; color: #ffffff; margin-top: 10px; }
+.btn-primary { 
+    background: var(--accent); 
+    color: #000; 
+    box-shadow: 0 4px 15px var(--accent-glow);
+}
+.btn-primary:active { transform: scale(0.97); background: var(--accent-hover); }
 
-.error-msg { color: #ff453a; font-size: 0.85rem; margin-top: 10px; }
+.btn-secondary { 
+    background: transparent; 
+    color: var(--text-main); 
+    border: 2px solid var(--border-color); 
+}
+.btn-secondary:active { background: rgba(255, 255, 255, 0.05); transform: scale(0.97); }
+
+.btn-admin { 
+    background: rgba(239, 68, 68, 0.1); 
+    color: #ef4444; 
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    margin-top: 16px; 
+}
+
+.error-msg { color: #ef4444; font-size: 0.9rem; margin-top: 12px; font-weight: 500; }
 .hidden { display: none !important; }
 
-/* CAMERA STYLES (9:16 Aspect Ratio) */
+/* CAMERA STYLES (9:16) */
 .camera-wrapper {
     position: relative;
     width: 100%;
     aspect-ratio: 9/16;
-    background: #111;
-    border-radius: 20px;
+    background: #000;
+    border-radius: 24px;
     overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border-color);
 }
 
 #camera-stream, #camera-canvas {
@@ -133,28 +184,46 @@ input {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
     pointer-events: none;
-    opacity: 0.35;
+    opacity: 0.4;
     background-size: cover;
     background-position: center;
+    mix-blend-mode: screen; /* Fonde meglio il fantasma con l'immagine reale */
 }
 
 .camera-actions {
-    margin-top: 20px;
+    margin-top: 24px;
     width: 100%;
     display: flex;
     justify-content: center;
 }
 
 .btn-shutter {
-    width: 70px;
-    height: 70px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
-    border: 5px solid #fff;
+    border: 6px solid var(--text-main);
     background: transparent;
     cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+}
+.btn-shutter:active {
+    background: var(--text-main);
+    transform: scale(0.9);
+}
+
+#retake-actions {
+    display: flex;
+    gap: 12px;
+    width: 100%;
 }
 
 /* FEED STYLES */
+.feed-header {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
 .feed-list {
     width: 100%;
     overflow-y: auto;
@@ -165,59 +234,75 @@ input {
 }
 
 .feed-item {
-    background: #111;
-    border-radius: 16px;
+    background: var(--card-bg);
+    border-radius: 20px;
     overflow: hidden;
-    border: 1px solid #222;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
 }
 
 .feed-user-info {
-    padding: 12px;
+    padding: 16px;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 1rem;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
-.feed-time { color: #666; font-size: 0.8rem; font-weight: 400; }
+.feed-time { 
+    color: var(--text-muted); 
+    font-size: 0.85rem; 
+    font-weight: 500; 
+}
 
 .feed-img {
     width: 100%;
     aspect-ratio: 9/16;
     object-fit: cover;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .feed-comments {
-    padding: 12px;
+    padding: 16px;
 }
 
 .comment-tag {
     display: inline-block;
-    background: #222;
-    padding: 4px 8px;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    margin-right: 6px;
-    margin-bottom: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.comment-tag span { color: #888; font-size: 0.75rem; }
+.comment-tag span { 
+    color: var(--accent); 
+    font-size: 0.8rem; 
+    font-weight: 700;
+    margin-right: 4px;
+}
 
 .comment-input-box {
     display: flex;
     gap: 8px;
-    margin-top: 8px;
+    margin-top: 12px;
 }
 
 .comment-input-box input {
     margin-bottom: 0;
-    padding: 8px 12px;
-    font-size: 0.85rem;
+    padding: 12px 16px;
+    font-size: 0.9rem;
     text-align: left;
+    border-radius: 12px;
 }
 
 .comment-input-box button {
     width: auto;
-    padding: 8px 16px;
-    font-size: 0.85rem;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 1.2rem;
 }
