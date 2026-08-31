@@ -184,4 +184,4 @@ def add_comment():
     return jsonify({'success': True, 'word': word})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5040, debug=True)
