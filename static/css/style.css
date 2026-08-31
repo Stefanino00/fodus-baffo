@@ -1,5 +1,5 @@
 /* =========================================
-   FODUS BAFFO - PREMIUM UI/UX 
+   FODUS BAFFO - PREMIUM UI/UX (FINAL FIX)
    ========================================= */
 
 :root {
@@ -37,20 +37,26 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+/* =========================================
+   BLOCCO SCROLL E FIX ALTEZZE MOBILE
+   ========================================= */
 body {
     background-color: var(--bg-panna);
     color: var(--text-main);
     display: flex;
     justify-content: center;
-    min-height: 100vh;
-    /* Previene lo "scrolling elastico" su iOS che mostra lo sfondo bianco dietro */
-    overscroll-behavior-y: none; 
+    
+    /* FIX CRUCIALE: Usa 100dvh e blocca lo scroll globale elastico di iOS */
+    height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior-y: none;
+    touch-action: pan-x pan-y;
 }
 
 .app-container {
     width: 100%;
     max-width: 420px;
-    min-height: 100vh;
+    height: 100dvh; /* Altezza dinamica perfetta per mobile */
     display: flex;
     flex-direction: column;
     position: relative;
@@ -100,12 +106,15 @@ body {
 }
 
 /* =========================================
-   VIEWS & ANIMAZIONI
+   VIEWS & SCROLL INTERNO
    ========================================= */
 .view {
     display: none;
     flex: 1;
     flex-direction: column;
+    /* Abilita lo scroll interno SOLO per schermate lunghe (es. Calendario) */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; 
     animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -114,6 +123,19 @@ body {
 @keyframes slideUpFade {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* ECCEZIONE: La fotocamera deve essere bloccata, centrata e senza slideUp (animazione semplice) */
+#view-camera {
+    overflow: hidden;
+    justify-content: center;
+    padding-bottom: 20px; 
+    animation: simpleFade 0.25s ease-out forwards;
+}
+
+@keyframes simpleFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 /* =========================================
@@ -255,7 +277,7 @@ input::placeholder { color: #C7C7CC; font-weight: 400; }
 #camera-stream, #camera-canvas {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* RIMETTILO: Serve a far combaciare l'anteprima al taglio finale! */
+    object-fit: cover; /* Mantiene proporzioni perfette senza stretch */
 }
 
 #camera-stream { transform: scaleX(-1); }
@@ -264,10 +286,10 @@ input::placeholder { color: #C7C7CC; font-weight: 400; }
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
     pointer-events: none;
-    opacity: 0.35;
+    opacity: 0.45;
     background-size: cover;
     background-position: center;
-    mix-blend-mode: screen; /* Fusione migliore della sagoma */
+    mix-blend-mode: screen; 
 }
 
 .camera-actions { 
@@ -370,7 +392,6 @@ input::placeholder { color: #C7C7CC; font-weight: 400; }
 .photo-author { 
     position: absolute; 
     bottom: 0; left: 0; right: 0; 
-    /* Sfumatura elegante dal basso */
     background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%); 
     color: #fff; 
     padding: 24px 12px 12px 12px; 
