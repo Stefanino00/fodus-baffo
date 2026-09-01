@@ -1,9 +1,10 @@
+
 let currentUser = null;
 let stream = null;
 let capturedBase64 = null;
+let midnightInterval = null;
 
-// LA TUA CHIAVE PUBBLICA VAPID (Incollala qui, mi raccomando!)
-const VAPID_PUBLIC_KEY = "BCdWDfFOUdE48sgpzDCkzR99SHBDr6fbzdRyKFdYp3ZGJAXRrsB0xz4huC5Hceh9yqANvz3-CgdPgnsPAJr5fn0";
+const VAPID_PUBLIC_KEY = "INCOLLA_QUI_LA_CHIAVE_PUBBLICA";
 
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -16,7 +17,6 @@ function urlBase64ToUint8Array(base64String) {
     return outputArray;
 }
 
-// Registrazione pulita e invisibile del Service Worker
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(err => console.error(err));
 }
@@ -37,7 +37,6 @@ function showView(viewId) {
     document.getElementById(viewId).classList.add('active');
 }
 
-// LOGIN
 document.getElementById('btn-login').addEventListener('click', async () => {
     const pin = document.getElementById('pin-input').value;
     const res = await fetch('/api/login', {
@@ -57,7 +56,6 @@ async function checkStatus() {
     currentUser = status.user;
     if (!currentUser.soprannome) return showView('view-onboarding');
 
-    // Popola Home Page
     const s = status.stats;
     document.getElementById('stat-photos-today').innerText = `${s.photos_today}/${s.total_users}`;
     document.getElementById('stat-days-passed').innerText = `Giorno ${s.days_passed}`;
@@ -72,17 +70,30 @@ async function checkStatus() {
     else if (s.days_remaining <= 31) pill.style.backgroundColor = 'var(--color-medium)';
     else pill.style.backgroundColor = 'var(--color-safe)';
 
+    // POPOLA AVATAR UTENTI MANCANTI
+    const missingContainer = document.getElementById('missing-users-container');
+    if (missingContainer) {
+        if (s.missing_users && s.missing_users.length > 0) {
+            missingContainer.innerHTML = s.missing_users.map(u => 
+                `<div class="avatar" title="${u.nome}">${u.iniziali}</div>`
+            ).join('');
+        } else {
+            missingContainer.innerHTML = `<div style="font-size: 0.9rem; color: var(--color-safe); font-weight: 700; margin-top: 8px;">Tutti hanno scattato! 🎉</div>`;
+        }
+    }
+
     const actionCard = document.getElementById('home-action-card');
     const urlParams = new URLSearchParams(window.location.search);
     const isPreview = urlParams.get('preview') === '1' && currentUser.is_admin;
 
-    // GESTIONE BANNER NOTIFICHE
     const notifPrompt = document.getElementById('notification-prompt');
     if ('Notification' in window && Notification.permission === 'default') {
         notifPrompt.classList.remove('hidden');
     } else {
         notifPrompt.classList.add('hidden');
     }
+
+    if (midnightInterval) clearInterval(midnightInterval);
 
     if (!status.sfida_iniziata && !isPreview) {
         actionCard.innerHTML = `<h3>In attesa... ⏳</h3><p class="stat-desc">Stefano deve sbloccare la sfida.</p>`;
@@ -96,13 +107,35 @@ async function checkStatus() {
         const urgent = hour >= 20; 
         const urgencyText = urgent ? "⏰ Ultime ore prima che scada la giornata!" : "Non dimenticare il tuo scatto di oggi";
 
+        // AGGIUNTO TIMER E ANIMAZIONI BOUNCE/PULSE
         actionCard.innerHTML = `
-            <h3>Tocca a te! 📸</h3>
+            <h3 class="bounce-text" style="color: var(--primary);">Tocca a te! 📸</h3>
             <p class="stat-desc">${urgencyText}</p>
-            <button id="btn-go-camera" class="btn-primary ${urgent ? 'pulse-cta' : ''}">Scatta la foto di oggi</button>
+            <div id="midnight-timer" class="midnight-timer">--:--:--</div>
+            <button id="btn-go-camera" class="btn-primary pulse-bounce" style="margin-top: 12px;">Scatta la foto di oggi</button>
         `;
+
+        midnightInterval = setInterval(() => {
+            const timerEl = document.getElementById('midnight-timer');
+            if (timerEl) {
+                const now = new Date();
+                const midnight = new Date();
+                midnight.setHours(23, 59, 59, 999);
+                const diff = midnight - now;
+                if (diff <= 0) {
+                    timerEl.innerText = "00:00:00";
+                } else {
+                    const h = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
+                    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+                    const s = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
+                    timerEl.innerText = `${h}:${m}:${s}`;
+                }
+            }
+        }, 1000);
+
         document.getElementById('btn-go-camera').addEventListener('click', () => {
-            const defaultGhost = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgMTAwMCI+PGVsbGlwc2UgY3g9IjQwMCIgY3k9IjM5MSIgcng9IjIwMCIgcnk9IjE4OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI4IiBzdHJva2UtZGFzaGFycmF5PSIxNSwxNSIgb3BhY2l0eT0iMC44Ii8+PHBhdGggZD0iTTExMSwxMDAwIEMxMTEsNzQyIDI0NCw2NjQgNDAwLDY2NCBDNTU2LDY2NCA2ODksNzQyIDY4OSwxMDAwIiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjgiIHN0cm9rZS1kYXNoYXJyYXk9IjE1LDE1IiBvcGFjaXR5PSIwLjgiLz48L3N2Zz4=";
+            // FIX: SOLO OVALE DEL VISO CENTRALE
+            const defaultGhost = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgMTAwMCI+PGVsbGlwc2UgY3g9IjQwMCIgY3k9IjQ1MCIgcng9IjIyMCIgcnk9IjMwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI4IiBzdHJva2UtZGFzaGFycmF5PSIxNSwxNSIgb3BhY2l0eT0iMC44Ii8+PC9zdmc+";
             const finalGhost = status.ghost_url ? status.ghost_url : defaultGhost;
             document.getElementById('ghost-overlay').style.backgroundImage = `url("${finalGhost}")`;
             showView('view-camera');
@@ -112,7 +145,6 @@ async function checkStatus() {
     showView('view-home');
 }
 
-// EVENTO ISCRIZIONE NOTIFICHE (Dal nuovo Banner)
 document.getElementById('btn-enable-notif')?.addEventListener('click', async () => {
     const btn = document.getElementById('btn-enable-notif');
     setButtonLoading(btn, true, "Attivazione...");
@@ -127,13 +159,11 @@ document.getElementById('btn-enable-notif')?.addEventListener('click', async () 
                     applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
                 });
             }
-            // Invia l'iscrizione al server
             await fetch('/api/subscribe', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(sub)
             });
-            // Ricarica la UI per nascondere il banner azzurro
             checkStatus();
         }
     } catch (err) {
@@ -157,7 +187,7 @@ document.getElementById('btn-save-nickname').addEventListener('click', async () 
 async function startCamera() {
     try {
         stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "user", aspectRatio: { ideal: 9/16 } }, 
+            video: { facingMode: "user", aspectRatio: { ideal: 4/5 } }, 
             audio: false 
         });
         const video = document.getElementById('camera-stream');
