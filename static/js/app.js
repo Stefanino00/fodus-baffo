@@ -2,6 +2,10 @@ let currentUser = null;
 let stream = null;
 let capturedBase64 = null;
 
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/static/js/sw.js').catch(err => console.error('SW registration failed', err));
+}
+
 function setButtonLoading(btn, isLoading, loadingText = "Attendi...") {
     if (isLoading) {
         btn.dataset.originalText = btn.innerHTML;
@@ -57,6 +61,11 @@ async function checkStatus() {
     const urlParams = new URLSearchParams(window.location.search);
     const isPreview = urlParams.get('preview') === '1' && currentUser.is_admin;
     const actionCard = document.getElementById('home-action-card');
+
+    // Mostra il bottone di test notifiche solo in modalità preview
+    if (isPreview) {
+        document.getElementById('notif-test-controls').classList.remove('hidden');
+    }
     
     // Se la sfida non è iniziata (e non sei in modalità preview)
     if (!status.sfida_iniziata && !isPreview) {
@@ -69,7 +78,17 @@ async function checkStatus() {
     } 
 // Se NON ha ancora fatto la foto
     else {
-        actionCard.innerHTML = `<h3>Tocca a te! 📸</h3><button id="btn-go-camera" class="btn-primary">Scatta la foto di oggi</button>`;
+        const hour = new Date().getHours();
+        const urgent = hour >= 20; // dopo le 20 diventa urgente — cambia soglia se vuoi
+        const urgencyText = urgent
+            ? "⏰ Ultime ore prima che scada la giornata!"
+            : "Non dimenticare il tuo scatto di oggi";
+
+        actionCard.innerHTML = `
+            <h3>Tocca a te! 📸</h3>
+            <p class="stat-desc">${urgencyText}</p>
+            <button id="btn-go-camera" class="btn-primary ${urgent ? 'pulse-cta' : ''}">Scatta la foto di oggi</button>
+        `;
         document.getElementById('btn-go-camera').addEventListener('click', () => {
             
             // FIX FANTASMA: sagoma ricalcolata per il nuovo formato camera (4:5 invece di 9:16)
@@ -91,6 +110,23 @@ async function checkStatus() {
 document.getElementById('btn-unlock-challenge')?.addEventListener('click', async () => {
     await fetch('/api/admin/start-challenge', {method: 'POST'});
     checkStatus();
+});
+
+document.getElementById('btn-test-notification')?.addEventListener('click', async () => {
+    if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+        alert("Notifiche non supportate qui — apri l'app dall'icona in Home Screen.");
+        return;
+    }
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+        alert("Permesso notifiche negato.");
+        return;
+    }
+    const reg = await navigator.serviceWorker.ready;
+    reg.showNotification("Fodus Baffo 🥸", {
+        body: "Questa è una notifica di test!",
+        icon: "/static/icons/icon-192.png"
+    });
 });
 
 document.getElementById('btn-save-nickname').addEventListener('click', async () => {
