@@ -37,6 +37,13 @@ with app.app_context():
 def index():
     return render_template('index.html')
 
+from flask import send_from_directory
+
+@app.route('/sw.js')
+def serve_sw():
+    # Serve il file da static/js ma lo fa apparire come se fosse nella root (/)
+    return send_from_directory(os.path.join(BASE_DIR, 'static', 'js'), 'sw.js', mimetype='application/javascript')
+
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.json or {}
