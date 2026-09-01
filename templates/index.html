@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Fodus Baffo</title>
     
-    <!-- Importa Space Grotesk -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700;800&display=swap" rel="stylesheet">
@@ -19,16 +18,19 @@
     <div id="screen-flash"></div>
     <div class="app-container">
         
-        <!-- HEADER AGGIORNATO -->
+        <!-- HEADER AGGIORNATO (Design Pulito, no linea) -->
         <header class="app-header">
             <h1>
                 <span class="title-fodus">FODUS</span>
                 <span class="title-baffo">BAFFO</span>
             </h1>
-            <div id="countdown-pill" class="countdown-badge">Caricamento...</div>
         </header>
+        
+        <!-- COUNTDOWN SPOSTATO SOTTO L'HEADER -->
+        <div style="text-align: center; margin-top: -5px; margin-bottom: 24px;">
+            <div id="countdown-pill" class="countdown-badge">Caricamento...</div>
+        </div>
 
-        <!-- VIEW 1: LOGIN PIN -->
         <section id="view-login" class="view active">
             <div class="card">
                 <h2>Accesso Sfida</h2>
@@ -38,7 +40,6 @@
             </div>
         </section>
 
-        <!-- VIEW 2: ONBOARDING -->
         <section id="view-onboarding" class="view">
             <div class="card">
                 <h2>Il tuo Nickname</h2>
@@ -47,14 +48,10 @@
             </div>
         </section>
 
-        <!-- VIEW 3: HOME DASHBOARD -->
         <section id="view-home" class="view">
+            <!-- DASHBOARD GRID IN COLONNA -->
             <div class="dashboard-grid">
-                <div class="stat-card">
-                    <span class="stat-title">Stato di Oggi</span>
-                    <h3 id="stat-photos-today" class="stat-value">0/4</h3>
-                    <span class="stat-desc">Hanno fatto la foto</span>
-                </div>
+                <!-- AVANZAMENTO PRIMA -->
                 <div class="stat-card">
                     <span class="stat-title">Avanzamento</span>
                     <h3 id="stat-days-passed" class="stat-value">Giorno 0</h3>
@@ -63,9 +60,20 @@
                     </div>
                     <span class="stat-desc">su 115 giorni</span>
                 </div>
+                
+                <!-- STATO DI OGGI + AVATAR DOPO -->
+                <div class="stat-card">
+                    <span class="stat-title">Stato di Oggi</span>
+                    <h3 id="stat-photos-today" class="stat-value">0/4</h3>
+                    <span class="stat-desc">Hanno fatto la foto</span>
+                    
+                    <!-- NUOVO: SEZIONE CHI MANCA -->
+                    <div id="missing-users-container" class="missing-users-container">
+                        <!-- Popolato via JS con le iniziali -->
+                    </div>
+                </div>
             </div>
 
-            <!-- BANNER ATTIVA NOTIFICHE (Visibile solo se mancano i permessi) -->
             <div id="notification-prompt" class="action-card hidden" style="background-color: var(--primary-light); border: 2px solid var(--primary); padding: 20px;">
                 <h3 style="font-size: 1.2rem; color: var(--primary);">🔔 Attiva le Notifiche</h3>
                 <p class="stat-desc" style="margin: 8px 0 16px 0;">Indispensabili per non farti scappare la foto quotidiana!</p>
@@ -73,7 +81,7 @@
             </div>
 
             <div class="action-card" id="home-action-card">
-                <!-- Verrà popolato da JS con "Scatta" o "Hai già scattato" -->
+                <!-- Verrà popolato da JS -->
             </div>
 
             <button id="btn-open-calendar" class="btn-secondary">📅 Guarda il Calendario</button>
@@ -83,7 +91,6 @@
             </div>
         </section>
 
-        <!-- VIEW 4: CAMERA (Corretta specchio e zoom) -->
         <section id="view-camera" class="view">
             <div class="camera-wrapper">
                 <video id="camera-stream" autoplay playsinline muted></video>
@@ -101,7 +108,6 @@
             <button class="btn-text-only mt-3" onclick="checkStatus()">Annulla e torna alla Home</button>
         </section>
 
-        <!-- VIEW 5: CALENDARIO -->
         <section id="view-calendar" class="view">
             <h2 class="section-title">Calendario Baffi 📸</h2>
             <div id="calendar-container" class="calendar-list">
@@ -112,10 +118,10 @@
 
     </div>
 
-    <script src="/static/js/app.js?v=8"></script>
+    <script src="/static/js/app.js?v=12"></script>
     <div id="success-overlay" class="success-overlay hidden">
-    <div class="success-check">✅</div>
-    <div class="success-text">Inviata! 🎉</div>
-</div>
+        <div class="success-check">✅</div>
+        <div class="success-text">Inviata! 🎉</div>
+    </div>
 </body>
 </html>
