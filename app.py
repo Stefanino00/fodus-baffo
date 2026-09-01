@@ -3,7 +3,8 @@ import base64
 from datetime import datetime, date
 from flask import Flask, render_template, request, jsonify, session
 from models import db, User, Photo, Comment, Settings
-
+import threading # <-- AGGIUNGI QUESTO
+from pywebpush import webpush, WebPushException
 import json
 from pywebpush import webpush, WebPushException
 
@@ -242,6 +243,19 @@ def subscribe():
     db.session.commit()
     return jsonify({'success': True})
 
+# Funzione separata che gira in background
+def delayed_push(subscription_info_json):
+    try:
+        webpush(
+            subscription_info=json.loads(subscription_info_json),
+            data="FODUS BAFFO 🥸: Test remoto! Se vedi questo ad app chiusa, HAI VINTO.",
+            vapid_private_key=VAPID_PRIVATE_KEY,
+            vapid_claims=VAPID_CLAIMS
+        )
+        print("Notifica ritardata inviata con successo!")
+    except Exception as ex:
+        print(f"Errore push ritardato: {ex}")
+
 @app.route('/api/admin/test-push', methods=['POST'])
 def admin_test_push():
     user_id = session.get('user_id')
@@ -253,16 +267,11 @@ def admin_test_push():
     if not user.push_subscription:
         return jsonify({'error': 'Nessuna iscrizione trovata per questo utente'}), 400
 
-    try:
-        webpush(
-            subscription_info=json.loads(user.push_subscription),
-            data="FODUS BAFFO: Questo è un test remoto dal server Hetzner! 🚀",
-            vapid_private_key=VAPID_PRIVATE_KEY,
-            vapid_claims=VAPID_CLAIMS
-        )
-        return jsonify({'success': True})
-    except WebPushException as ex:
-        return jsonify({'error': str(ex)}), 500
+    # Invece di inviarla subito, diciamo a Python di avviare 
+    # la funzione delayed_push tra esattamente 15.0 secondi
+    threading.Timer(15.0, delayed_push, args=[user.push_subscription]).start()
+    
+    return jsonify({'success': True})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5040, debug=True)
