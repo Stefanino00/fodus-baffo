@@ -500,3 +500,9 @@ input::placeholder { color: #C7C7CC; font-weight: 400; }
 .day-cell.today .day-count { background: #fff; color: var(--primary); }
 
 #day-detail { margin-top: 20px; }
+
+.btn-primary:disabled, .btn-secondary:disabled, .btn-admin:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+}
