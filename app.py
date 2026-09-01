@@ -7,8 +7,8 @@ from models import db, User, Photo, Comment, Settings
 import json
 from pywebpush import webpush, WebPushException
 
-VAPID_PUBLIC_KEY = "INCOLLA_QUI_LA_CHIAVE_PUBBLICA"
-VAPID_PRIVATE_KEY = "INCOLLA_QUI_LA_CHIAVE_PRIVATA"
+VAPID_PUBLIC_KEY = "BCdWDfFOUdE48sgpzDCkzR99SHBDr6fbzdRyKFdYp3ZGJAXRrsB0xz4huC5Hceh9yqANvz3-CgdPgnsPAJr5fn0"
+VAPID_PRIVATE_KEY = "mWmuS_jdca1L_gwvPQX-sT_skpWpwLSYfNleLngOMYw"
 VAPID_CLAIMS = {"sub": "mailto:ferrasteferra@gmail.com"}
 
 
