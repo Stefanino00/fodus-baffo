@@ -287,10 +287,10 @@ def check_and_send_notifications(time_slot):
             print(f"👥 [SCHEDULER] Trovati {len(users)} utenti nel database.")
             
             messages = {
-                '12': "🥸 Ricordati la foto del baffo! Hai tempo fino a stasera.",
+                '12': "Ricordati la foto del baffo! Hai tempo fino a stasera.",
                 '15': "🧪 TEST SCHEDULER! Se leggi questo, funziona!",
                 '19': "🚨 LA FOTO DEL BAFFO! Dai entra e scattala!",
-                '22': "⚠️ MANDA LA FOTO DEL BAFFO! Ultima chiamata prima di mezzanotte! 🤬"
+                '22': "⚠️ MANDA LA FOTO DEL BAFFO! Ultima chiamata prima di mezzanotte!"
             }
             testo_notifica = messages.get(time_slot, "È ora di fare la foto!")
 
@@ -320,7 +320,7 @@ scheduler = BackgroundScheduler(timezone="Europe/Rome")
 
 # Imposta gli orari esatti in cui far partire i controlli
 scheduler.add_job(func=check_and_send_notifications, trigger="cron", hour=12, minute=0, args=['12'])
-scheduler.add_job(func=check_and_send_notifications, trigger="cron", hour=15, minute=18, args=['15'])
+scheduler.add_job(func=check_and_send_notifications, trigger="cron", hour=19, minute=0, args=['19'])
 scheduler.add_job(func=check_and_send_notifications, trigger="cron", hour=22, minute=0, args=['22'])
 
 # Avvia il motore in background
