@@ -114,20 +114,26 @@ document.getElementById('btn-unlock-challenge')?.addEventListener('click', async
 });
 
 document.getElementById('btn-test-notification')?.addEventListener('click', async () => {
-    if (!('serviceWorker' in navigator) || !('Notification' in window)) {
-        alert("Notifiche non supportate qui — apri l'app dall'icona in Home Screen.");
-        return;
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/static/js/sw.js')
+            .then(() => console.log('SW registrato'))
+            .catch(err => alert("Registrazione service worker fallita: " + err.message));
     }
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-        alert("Permesso notifiche negato.");
-        return;
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+            alert("Permesso notifiche negato.");
+            return;
+        }
+        const reg = await navigator.serviceWorker.ready;
+        await reg.showNotification("Fodus Baffo 🥸", {
+            body: "Questa è una notifica di test!",
+            icon: "/static/icons/icon-192.png"
+        });
+        alert("Notifica inviata! Se non compare, controlla Impostazioni iOS → Fodus Baffo → Notifiche.");
+    } catch (err) {
+        alert("Errore: " + err.message);
     }
-    const reg = await navigator.serviceWorker.ready;
-    reg.showNotification("Fodus Baffo 🥸", {
-        body: "Questa è una notifica di test!",
-        icon: "/static/icons/icon-192.png"
-    });
 });
 
 document.getElementById('btn-save-nickname').addEventListener('click', async () => {
