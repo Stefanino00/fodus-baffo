@@ -48,7 +48,8 @@ async function checkStatus() {
 
     // Barra di avanzamento
     const progressPct = Math.min(100, (s.days_passed / s.total_days) * 100);
-    document.getElementById('progress-bar-fill').style.width = `${progressPct}%`;
+    const progressBar = document.getElementById('progress-bar-fill');
+    if (progressBar) progressBar.style.width = `${progressPct}%`;
     
     // Gestione Colore Countdown
     const pill = document.getElementById('countdown-pill');
@@ -64,7 +65,7 @@ async function checkStatus() {
 
     // Mostra il bottone di test notifiche solo in modalità preview
     if (isPreview) {
-        document.getElementById('notif-test-controls').classList.remove('hidden');
+        document.getElementById('notif-test-controls')?.classList.remove('hidden');
     }
     
     // Se la sfida non è iniziata (e non sei in modalità preview)
