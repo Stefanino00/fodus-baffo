@@ -47,25 +47,29 @@
             </div>
         </section>
 
-        <!-- VIEW 3: HOME DASHBOARD (NUOVA!) -->
+        <!-- VIEW 3: HOME DASHBOARD -->
         <section id="view-home" class="view">
             <div class="dashboard-grid">
-                
                 <div class="stat-card">
                     <span class="stat-title">Stato di Oggi</span>
                     <h3 id="stat-photos-today" class="stat-value">0/4</h3>
                     <span class="stat-desc">Hanno fatto la foto</span>
                 </div>
-
-            <div class="stat-card">
-                <span class="stat-title">Avanzamento</span>
-                <h3 id="stat-days-passed" class="stat-value">Giorno 0</h3>
-                <div class="progress-bar-track">
-                    <div id="progress-bar-fill" class="progress-bar-fill"></div>
+                <div class="stat-card">
+                    <span class="stat-title">Avanzamento</span>
+                    <h3 id="stat-days-passed" class="stat-value">Giorno 0</h3>
+                    <div class="progress-bar-track">
+                        <div id="progress-bar-fill" class="progress-bar-fill"></div>
+                    </div>
+                    <span class="stat-desc">su 115 giorni</span>
                 </div>
-                <span class="stat-desc">su 115 giorni</span>
             </div>
 
+            <!-- BANNER ATTIVA NOTIFICHE (Visibile solo se mancano i permessi) -->
+            <div id="notification-prompt" class="action-card hidden" style="background-color: var(--primary-light); border: 2px solid var(--primary); padding: 20px;">
+                <h3 style="font-size: 1.2rem; color: var(--primary);">🔔 Attiva le Notifiche</h3>
+                <p class="stat-desc" style="margin: 8px 0 16px 0;">Indispensabili per non farti scappare la foto quotidiana!</p>
+                <button id="btn-enable-notif" class="btn-primary" style="padding: 12px; font-size: 1rem;">Consenti Notifiche</button>
             </div>
 
             <div class="action-card" id="home-action-card">
@@ -77,9 +81,6 @@
             <div id="admin-controls" class="hidden" style="margin-top:20px;">
                 <button id="btn-unlock-challenge" class="btn-admin">🚀 Admin: Inizia Sfida</button>
             </div>
-            <div id="notif-test-controls" class="hidden" style="margin-top:12px;">
-                    <button id="btn-test-notification" class="btn-secondary">🔔 Invia notifica di test</button>
-                </div>
         </section>
 
         <!-- VIEW 4: CAMERA (Corretta specchio e zoom) -->
