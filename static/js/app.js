@@ -152,10 +152,21 @@ document.getElementById('btn-capture').addEventListener('click', () => {
 document.getElementById('btn-retake').addEventListener('click', startCamera);
 
 document.getElementById('btn-upload').addEventListener('click', async () => {
-    const res = await fetch('/api/upload-photo', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({image: capturedBase64}) });
-    if (res.ok) {
-        if (stream) stream.getTracks().forEach(track => track.stop());
-        checkStatus();
+    const btn = document.getElementById('btn-upload');
+    setButtonLoading(btn, true, "Invio...");
+    try {
+        const res = await fetch('/api/upload-photo', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({image: capturedBase64}) });
+        if (res.ok) {
+            if (stream) stream.getTracks().forEach(track => track.stop());
+            const overlay = document.getElementById('success-overlay');
+            overlay.classList.add('active');
+            setTimeout(() => {
+                overlay.classList.remove('active');
+                checkStatus();
+            }, 1300);
+        }
+    } finally {
+        setButtonLoading(btn, false);
     }
 });
 
