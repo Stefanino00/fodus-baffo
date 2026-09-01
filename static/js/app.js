@@ -25,13 +25,15 @@ async function checkStatus() {
     
     const status = await res.json();
     currentUser = status.user;
-
     if (!currentUser.soprannome) return showView('view-onboarding');
-
     // Popola Home Page
     const s = status.stats;
     document.getElementById('stat-photos-today').innerText = `${s.photos_today}/${s.total_users}`;
     document.getElementById('stat-days-passed').innerText = `Giorno ${s.days_passed}`;
+
+    // Barra di avanzamento
+    const progressPct = Math.min(100, (s.days_passed / s.total_days) * 100);
+    document.getElementById('progress-bar-fill').style.width = `${progressPct}%`;
     
     // Gestione Colore Countdown
     const pill = document.getElementById('countdown-pill');
@@ -40,11 +42,9 @@ async function checkStatus() {
     if (s.days_remaining <= 15) pill.style.backgroundColor = 'var(--color-danger)';
     else if (s.days_remaining <= 31) pill.style.backgroundColor = 'var(--color-medium)';
     else pill.style.backgroundColor = 'var(--color-safe)';
-
     // BYPASS PREVIEW SEGRETAMENTE (Il pezzo che mancava!)
     const urlParams = new URLSearchParams(window.location.search);
     const isPreview = urlParams.get('preview') === '1' && currentUser.is_admin;
-
     const actionCard = document.getElementById('home-action-card');
     
     // Se la sfida non è iniziata (e non sei in modalità preview)
@@ -61,9 +61,8 @@ async function checkStatus() {
         actionCard.innerHTML = `<h3>Tocca a te! 📸</h3><button id="btn-go-camera" class="btn-primary">Scatta la foto di oggi</button>`;
         document.getElementById('btn-go-camera').addEventListener('click', () => {
             
-            // FIX FANTASMA: Convertito in Base64 per evitare errori del CSS con le virgolette
             // FIX FANTASMA: sagoma ricalcolata per il nuovo formato camera (4:5 invece di 9:16)
-const defaultGhost = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgMTAwMCI+PGVsbGlwc2UgY3g9IjQwMCIgY3k9IjM5MSIgcng9IjIwMCIgcnk9IjE4OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI4IiBzdHJva2UtZGFzaGFycmF5PSIxNSwxNSIgb3BhY2l0eT0iMC44Ii8+PHBhdGggZD0iTTExMSwxMDAwIEMxMTEsNzQyIDI0NCw2NjQgNDAwLDY2NCBDNTU2LDY2NCA2ODksNzQyIDY4OSwxMDAwIiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjgiIHN0cm9rZS1kYXNoYXJyYXk9IjE1LDE1IiBvcGFjaXR5PSIwLjgiLz48L3N2Zz4=";
+            const defaultGhost = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgMTAwMCI+PGVsbGlwc2UgY3g9IjQwMCIgY3k9IjM5MSIgcng9IjIwMCIgcnk9IjE4OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI4IiBzdHJva2UtZGFzaGFycmF5PSIxNSwxNSIgb3BhY2l0eT0iMC44Ii8+PHBhdGggZD0iTTExMSwxMDAwIEMxMTEsNzQyIDI0NCw2NjQgNDAwLDY2NCBDNTU2LDY2NCA2ODksNzQyIDY4OSwxMDAwIiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjgiIHN0cm9rZS1kYXNoYXJyYXk9IjE1LDE1IiBvcGFjaXR5PSIwLjgiLz48L3N2Zz4=";
             
             const finalGhost = status.ghost_url ? status.ghost_url : defaultGhost;
             
@@ -74,7 +73,6 @@ const defaultGhost = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53
             startCamera();
         });
     }
-
     showView('view-home');
 }
 
@@ -152,27 +150,111 @@ document.getElementById('btn-upload').addEventListener('click', async () => {
 
 // CALENDARIO
 document.getElementById('btn-open-calendar').addEventListener('click', async () => {
-    const res = await fetch('/api/calendar');
-    const data = await res.json();
+    const btn = document.getElementById('btn-open-calendar');
+    setButtonLoading(btn, true, "Carico...");
+    try {
+        const res = await fetch('/api/calendar');
+        const data = await res.json();
+        renderCalendar(data);
+        showView('view-calendar');
+    } finally {
+        setButtonLoading(btn, false);
+    }
+});
+
+const MESI_IT = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+const GIORNI_IT = ["L","M","M","G","V","S","D"];
+
+function renderCalendar(data) {
     const container = document.getElementById('calendar-container');
     container.innerHTML = '';
 
-    for (const [date, photos] of Object.entries(data)) {
-        const photosHtml = photos.map(p => `
-            <div class="photo-item">
-                <img src="${p.url}">
-                <div class="photo-author">${p.author_name} - ${p.time}</div>
-            </div>
-        `).join('');
+    const today = data.today;
+    const dayKeys = Object.keys(data.days).sort();
 
-        container.innerHTML += `
-            <div class="day-group">
-                <div class="day-title">${date}</div>
-                <div class="photo-grid">${photosHtml}</div>
-            </div>
-        `;
-    }
-    showView('view-calendar');
-});
+    const months = {};
+    dayKeys.forEach(key => {
+        const d = new Date(key + 'T00:00:00');
+        const mk = `${d.getFullYear()}-${d.getMonth()}`;
+        if (!months[mk]) months[mk] = { year: d.getFullYear(), month: d.getMonth(), days: [] };
+        months[mk].days.push(key);
+    });
+
+    Object.values(months).forEach(m => {
+        const monthBlock = document.createElement('div');
+        monthBlock.className = 'month-block';
+
+        const title = document.createElement('div');
+        title.className = 'month-title';
+        title.innerText = `${MESI_IT[m.month]} ${m.year}`;
+        monthBlock.appendChild(title);
+
+        const weekdaysRow = document.createElement('div');
+        weekdaysRow.className = 'calendar-grid weekday-row';
+        GIORNI_IT.forEach(g => {
+            const cell = document.createElement('div');
+            cell.className = 'weekday-label';
+            cell.innerText = g;
+            weekdaysRow.appendChild(cell);
+        });
+        monthBlock.appendChild(weekdaysRow);
+
+        const grid = document.createElement('div');
+        grid.className = 'calendar-grid';
+
+        const firstDay = new Date(m.days[0] + 'T00:00:00');
+        let firstWeekday = firstDay.getDay();
+        firstWeekday = (firstWeekday === 0) ? 6 : firstWeekday - 1; // Lunedì = 0
+        for (let i = 0; i < firstWeekday; i++) {
+            const empty = document.createElement('div');
+            empty.className = 'day-cell empty';
+            grid.appendChild(empty);
+        }
+
+        m.days.forEach(key => {
+            const info = data.days[key];
+            const dayNum = parseInt(key.split('-')[2]);
+
+            const cell = document.createElement('div');
+            cell.className = 'day-cell';
+            cell.classList.add(key < today ? 'past' : 'upcoming');
+            if (key === today) cell.classList.add('today');
+
+            cell.innerHTML = `<span class="day-number">${dayNum}</span>`;
+            if (info.count > 0) {
+                cell.innerHTML += `<span class="day-count">${info.count}</span>`;
+                cell.classList.add('has-photos');
+                cell.addEventListener('click', () => showDayPhotos(key, info.photos));
+            }
+            grid.appendChild(cell);
+        });
+
+        monthBlock.appendChild(grid);
+        container.appendChild(monthBlock);
+    });
+
+    const detailBox = document.createElement('div');
+    detailBox.id = 'day-detail';
+    container.appendChild(detailBox);
+}
+
+function showDayPhotos(dateKey, photos) {
+    const detailBox = document.getElementById('day-detail');
+    if (!photos.length) return;
+    const [y, mo, d] = dateKey.split('-');
+
+    const photosHtml = photos.map(p => `
+        <div class="photo-item">
+            <img src="${p.url}">
+            <div class="photo-author">${p.author_name} - ${p.time}</div>
+        </div>
+    `).join('');
+
+    detailBox.innerHTML = `
+        <div class="day-title">${d}/${mo}/${y}</div>
+        <div class="photo-grid">${photosHtml}</div>
+    `;
+    detailBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
 
 checkStatus();
