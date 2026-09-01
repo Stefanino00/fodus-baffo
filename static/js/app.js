@@ -4,7 +4,7 @@ let stream = null;
 let capturedBase64 = null;
 let midnightInterval = null;
 
-const VAPID_PUBLIC_KEY = "INCOLLA_QUI_LA_CHIAVE_PUBBLICA";
+const VAPID_PUBLIC_KEY = "BCdWDfFOUdE48sgpzDCkzR99SHBDr6fbzdRyKFdYp3ZGJAXRrsB0xz4huC5Hceh9yqANvz3-CgdPgnsPAPgnsPAJr5fn0";
 
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
