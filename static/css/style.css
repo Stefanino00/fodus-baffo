@@ -267,12 +267,13 @@ input::placeholder { color: #C7C7CC; font-weight: 400; }
 .camera-wrapper {
     position: relative;
     width: 100%;
-    aspect-ratio: 3/4; /* era 9/16 — meno stretto, meno crop, più campo visivo */
+    aspect-ratio: 4/5; /* era 3/4 */
     background: #000;
     border-radius: 32px;
     overflow: hidden;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
+
 #camera-stream, #camera-canvas {
     width: 100%;
     height: 100%;
@@ -381,6 +382,7 @@ input::placeholder { color: #C7C7CC; font-weight: 400; }
     aspect-ratio: 3/4; /* era 9/16 — stessa forma della camera, coerenza nel calendario */
     box-shadow: var(--shadow-card);
     background: var(--surface);
+    aspect-ratio: 4/5; /
 }
 .photo-item img { 
     width: 100%; height: 100%; 
