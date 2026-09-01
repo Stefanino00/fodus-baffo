@@ -13,8 +13,8 @@ from models import db, User, Photo, Comment, Settings
 app = Flask(__name__)
 app.secret_key = 'fodus_baffo_super_secret_key_2026'
 
-VAPID_PUBLIC_KEY = "INCOLLA_QUI_LA_CHIAVE_PUBBLICA"
-VAPID_PRIVATE_KEY = "INCOLLA_QUI_LA_CHIAVE_PRIVATA"
+VAPID_PUBLIC_KEY = "BCdWDfFOUdE48sgpzDCkzR99SHBDr6fbzdRyKFdYp3ZGJAXRrsB0xz4huC5Hceh9yqANvz3-CgdPgnsPA"
+VAPID_PRIVATE_KEY = "mWmuS_jdca1L_gwvPQX-sT_skpWpwLSYfNleLngOMYw"
 VAPID_CLAIMS = {"sub": "mailto:ferrasteferra@gmail.com"}
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
