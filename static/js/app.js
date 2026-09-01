@@ -1,9 +1,32 @@
+// PANNELLO DEBUG A SCHERMO (temporaneo)
+function debugLog(msg) {
+    let panel = document.getElementById('debug-panel');
+    if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'debug-panel';
+        panel.style.cssText = 'position:fixed;bottom:0;left:0;right:0;max-height:40vh;overflow-y:auto;background:rgba(0,0,0,0.9);color:#0f0;font-size:11px;font-family:monospace;padding:8px;z-index:99999;white-space:pre-wrap;';
+        document.body.appendChild(panel);
+    }
+    const line = document.createElement('div');
+    line.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    panel.appendChild(line);
+    panel.scrollTop = panel.scrollHeight;
+}
+
+window.addEventListener('error', (e) => debugLog(`❌ ERRORE GLOBALE: ${e.message}`));
+window.addEventListener('unhandledrejection', (e) => debugLog(`❌ PROMISE RIFIUTATA: ${e.reason}`));
+
 let currentUser = null;
 let stream = null;
 let capturedBase64 = null;
 
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/static/js/sw.js').catch(err => console.error('SW registration failed', err));
+    debugLog('Registrando service worker...');
+    navigator.serviceWorker.register('/static/js/sw.js')
+        .then((reg) => debugLog(`✅ SW registrato, scope: ${reg.scope}`))
+        .catch(err => debugLog(`❌ Registrazione SW fallita: ${err.message}`));
+} else {
+    debugLog('❌ serviceWorker non supportato qui');
 }
 
 function setButtonLoading(btn, isLoading, loadingText = "Attendi...") {
@@ -113,25 +136,36 @@ document.getElementById('btn-unlock-challenge')?.addEventListener('click', async
 });
 
 document.getElementById('btn-test-notification')?.addEventListener('click', async () => {
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/static/js/sw.js')
-            .then(() => console.log('SW registrato'))
-            .catch(err => alert("Registrazione service worker fallita: " + err.message));
+    debugLog('--- Click bottone notifica ---');
+    debugLog(`Notification API presente: ${'Notification' in window}`);
+    debugLog(`Permesso attuale: ${Notification.permission}`);
+
+    if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+        debugLog('❌ API non supportate in questo contesto.');
+        return;
     }
     try {
         const permission = await Notification.requestPermission();
+        debugLog(`Risultato richiesta permesso: ${permission}`);
         if (permission !== 'granted') {
-            alert("Permesso notifiche negato.");
+            debugLog('❌ Permesso non concesso, stop.');
             return;
         }
+        debugLog('Attendo navigator.serviceWorker.ready...');
         const reg = await navigator.serviceWorker.ready;
+        debugLog(`✅ SW pronto — scope: ${reg.scope}, active: ${!!reg.active}`);
+
+        debugLog('Chiamo showNotification...');
         await reg.showNotification("Fodus Baffo 🥸", {
             body: "Questa è una notifica di test!",
             icon: "/static/icons/icon-192.png"
         });
-        alert("Notifica inviata! Se non compare, controlla Impostazioni iOS → Fodus Baffo → Notifiche.");
+        debugLog('✅ showNotification eseguita SENZA errori.');
+
+        const notifs = await reg.getNotifications();
+        debugLog(`Notifiche attive registrate: ${notifs.length}`);
     } catch (err) {
-        alert("Errore: " + err.message);
+        debugLog(`❌ ERRORE: ${err.name} - ${err.message}`);
     }
 });
 
