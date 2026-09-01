@@ -62,12 +62,11 @@ async function checkStatus() {
     const urlParams = new URLSearchParams(window.location.search);
     const isPreview = urlParams.get('preview') === '1' && currentUser.is_admin;
     const actionCard = document.getElementById('home-action-card');
-
-    // Mostra il bottone di test notifiche solo in modalità preview
-    if (isPreview) {
+    // Mostra il bottone di test notifiche a chiunque sia admin, indipendentemente dall'URL
+    if (currentUser.is_admin) {
         document.getElementById('notif-test-controls')?.classList.remove('hidden');
     }
-    
+        
     // Se la sfida non è iniziata (e non sei in modalità preview)
     if (!status.sfida_iniziata && !isPreview) {
         actionCard.innerHTML = `<h3>In attesa... ⏳</h3><p class="stat-desc">Stefano deve sbloccare la sfida.</p>`;
