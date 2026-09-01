@@ -62,7 +62,8 @@ async function checkStatus() {
         document.getElementById('btn-go-camera').addEventListener('click', () => {
             
             // FIX FANTASMA: Convertito in Base64 per evitare errori del CSS con le virgolette
-            const defaultGhost = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3MjAgMTI4MCI+PGVsbGlwc2UgY3g9IjM2MCIgY3k9IjUwMCIgcng9IjE4MCIgcnk9IjI0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI4IiBzdHJva2UtZGFzaGFycmF5PSIxNSwxNSIgb3BhY2l0eT0iMC44Ii8+PHBhdGggZD0iTTEwMCwxMjgwIEMxMDAsOTUwIDIyMCw4NTAgMzYwLDg1MCBDNTAwLDg1MCA2MjAsOTUwIDYyMCwxMjgwIiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjgiIHN0cm9rZS1kYXNoYXJyYXk9IjE1LDE1IiBvcGFjaXR5PSIwLjgiLz48L3N2Zz4=";
+            // FIX FANTASMA: sagoma ricalcolata per il nuovo formato camera (4:5 invece di 9:16)
+const defaultGhost = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgMTAwMCI+PGVsbGlwc2UgY3g9IjQwMCIgY3k9IjM5MSIgcng9IjIwMCIgcnk9IjE4OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI4IiBzdHJva2UtZGFzaGFycmF5PSIxNSwxNSIgb3BhY2l0eT0iMC44Ii8+PHBhdGggZD0iTTExMSwxMDAwIEMxMTEsNzQyIDI0NCw2NjQgNDAwLDY2NCBDNTU2LDY2NCA2ODksNzQyIDY4OSwxMDAwIiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjgiIHN0cm9rZS1kYXNoYXJyYXk9IjE1LDE1IiBvcGFjaXR5PSIwLjgiLz48L3N2Zz4=";
             
             const finalGhost = status.ghost_url ? status.ghost_url : defaultGhost;
             
