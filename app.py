@@ -159,24 +159,42 @@ def get_status():
         }
     })
 
+from datetime import timedelta
+
 @app.route('/api/calendar', methods=['GET'])
 def get_calendar():
-    photos = Photo.query.order_by(Photo.timestamp.desc()).all()
-    calendar_data = {}
-    
+    start_date = date(2026, 9, 1)
+    end_date = date(2026, 12, 24)
+    today = datetime.utcnow().date()
+
+    photos = Photo.query.filter(
+        Photo.date_created >= start_date, Photo.date_created <= end_date
+    ).order_by(Photo.timestamp.asc()).all()
+
+    photos_by_date = {}
     for p in photos:
-        date_str = p.date_created.strftime('%d/%m/%Y')
-        if date_str not in calendar_data:
-            calendar_data[date_str] = []
-            
-        calendar_data[date_str].append({
+        key = p.date_created.isoformat()
+        photos_by_date.setdefault(key, []).append({
             'photo_id': p.id,
             'author_name': p.author.soprannome or p.author.nome,
             'url': f"/static/uploads/{p.filename}",
             'time': p.timestamp.strftime('%H:%M')
         })
-    
-    return jsonify(calendar_data)
+
+    days = {}
+    current = start_date
+    while current <= end_date:
+        key = current.isoformat()
+        day_photos = photos_by_date.get(key, [])
+        days[key] = {'count': len(day_photos), 'photos': day_photos}
+        current += timedelta(days=1)
+
+    return jsonify({
+        'start_date': start_date.isoformat(),
+        'end_date': end_date.isoformat(),
+        'today': today.isoformat(),
+        'days': days
+    })
 
 @app.route('/api/comment', methods=['POST'])
 def add_comment():
