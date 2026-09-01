@@ -4,6 +4,14 @@ from datetime import datetime, date
 from flask import Flask, render_template, request, jsonify, session
 from models import db, User, Photo, Comment, Settings
 
+import json
+from pywebpush import webpush, WebPushException
+
+VAPID_PUBLIC_KEY = "INCOLLA_QUI_LA_CHIAVE_PUBBLICA"
+VAPID_PRIVATE_KEY = "INCOLLA_QUI_LA_CHIAVE_PRIVATA"
+VAPID_CLAIMS = {"sub": "mailto:ferrasteferra@gmail.com"}
+
+
 app = Flask(__name__)
 app.secret_key = 'fodus_baffo_super_secret_key_2026'
 
@@ -221,6 +229,40 @@ def add_comment():
     db.session.commit()
     
     return jsonify({'success': True, 'word': word})
+
+@app.route('/api/subscribe', methods=['POST'])
+def subscribe():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Non autorizzato'}), 401
+    
+    sub_info = request.json
+    user = User.query.get(user_id)
+    user.push_subscription = json.dumps(sub_info)
+    db.session.commit()
+    return jsonify({'success': True})
+
+@app.route('/api/admin/test-push', methods=['POST'])
+def admin_test_push():
+    user_id = session.get('user_id')
+    user = User.query.get(user_id) if user_id else None
+    
+    if not user or not user.is_admin:
+        return jsonify({'error': 'Solo admin'}), 403
+        
+    if not user.push_subscription:
+        return jsonify({'error': 'Nessuna iscrizione trovata per questo utente'}), 400
+
+    try:
+        webpush(
+            subscription_info=json.loads(user.push_subscription),
+            data="FODUS BAFFO: Questo è un test remoto dal server Hetzner! 🚀",
+            vapid_private_key=VAPID_PRIVATE_KEY,
+            vapid_claims=VAPID_CLAIMS
+        )
+        return jsonify({'success': True})
+    except WebPushException as ex:
+        return jsonify({'error': str(ex)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5040, debug=True)
