@@ -22,7 +22,8 @@ let capturedBase64 = null;
 
 if ('serviceWorker' in navigator) {
     debugLog('Registrando service worker...');
-    navigator.serviceWorker.register('/static/js/sw.js')
+    // FIX SCOPE: Registriamo il SW dalla root!
+    navigator.serviceWorker.register('/sw.js')
         .then((reg) => debugLog(`✅ SW registrato, scope: ${reg.scope}`))
         .catch(err => debugLog(`❌ Registrazione SW fallita: ${err.message}`));
 } else {
