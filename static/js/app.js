@@ -20,6 +20,19 @@ let currentUser = null;
 let stream = null;
 let capturedBase64 = null;
 
+const VAPID_PUBLIC_KEY = "BCdWDfFOUdE48sgpzDCkzR99SHBDr6fbzdRyKFdYp3ZGJAXRrsB0xz4huC5Hceh9yqANvz3-CgdPgnsPAJr5fn0";
+
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
 if ('serviceWorker' in navigator) {
     debugLog('Registrando service worker...');
     // FIX SCOPE: Registriamo il SW dalla root!
@@ -137,36 +150,47 @@ document.getElementById('btn-unlock-challenge')?.addEventListener('click', async
 });
 
 document.getElementById('btn-test-notification')?.addEventListener('click', async () => {
-    debugLog('--- Click bottone notifica ---');
-    debugLog(`Notification API presente: ${'Notification' in window}`);
-    debugLog(`Permesso attuale: ${Notification.permission}`);
-
-    if (!('serviceWorker' in navigator) || !('Notification' in window)) {
-        debugLog('❌ API non supportate in questo contesto.');
-        return;
+    debugLog('--- Click bottone notifica REMOTE ---');
+    
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        return debugLog('❌ Push non supportato in questo browser.');
     }
+
     try {
         const permission = await Notification.requestPermission();
-        debugLog(`Risultato richiesta permesso: ${permission}`);
-        if (permission !== 'granted') {
-            debugLog('❌ Permesso non concesso, stop.');
-            return;
-        }
-        debugLog('Attendo navigator.serviceWorker.ready...');
+        if (permission !== 'granted') return debugLog('❌ Permesso negato.');
+        
+        debugLog('Attendo SW ready...');
         const reg = await navigator.serviceWorker.ready;
-        debugLog(`✅ SW pronto — scope: ${reg.scope}, active: ${!!reg.active}`);
-
-        debugLog('Chiamo showNotification...');
-        await reg.showNotification("Fodus Baffo 🥸", {
-            body: "Questa è una notifica di test!",
-            icon: "/static/icons/icon-192.png"
+        
+        debugLog('Richiedo iscrizione Push ai server Apple/Google...');
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+            sub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+            });
+        }
+        
+        debugLog('Invio iscrizione al server Hetzner...');
+        await fetch('/api/subscribe', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(sub)
         });
-        debugLog('✅ showNotification eseguita SENZA errori.');
-
-        const notifs = await reg.getNotifications();
-        debugLog(`Notifiche attive registrate: ${notifs.length}`);
+        
+        debugLog('✅ Iscritto! Ora chiedo al server di sparare la notifica...');
+        const res = await fetch('/api/admin/test-push', { method: 'POST' });
+        
+        if (res.ok) {
+            debugLog('✅ Il server ha spedito la notifica con successo!');
+        } else {
+            const err = await res.json();
+            debugLog(`❌ Errore server: ${err.error}`);
+        }
+        
     } catch (err) {
-        debugLog(`❌ ERRORE: ${err.name} - ${err.message}`);
+        debugLog(`❌ ERRORE: ${err.message}`);
     }
 });
 
