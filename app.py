@@ -287,6 +287,7 @@ def check_and_send_notifications(time_slot):
         # L'escalation dei messaggi in base all'orario
         messages = {
             '12': "🥸 Ricordati la foto del baffo! Hai tempo fino a stasera.",
+            '15': "🧪 TEST DELLE 15:05! Se leggi questo, il cronjob funziona perfettamente!",
             '19': "🚨 LA FOTO DEL BAFFO! Dai entra e scattala!",
             '22': "⚠️ MANDA LA FOTO DEL BAFFO! Ultima chiamata prima di mezzanotte! 🤬"
         }
