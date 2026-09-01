@@ -320,7 +320,7 @@ scheduler = BackgroundScheduler(timezone="Europe/Rome")
 
 # Imposta gli orari esatti in cui far partire i controlli
 scheduler.add_job(func=check_and_send_notifications, trigger="cron", hour=12, minute=0, args=['12'])
-scheduler.add_job(func=check_and_send_notifications, trigger="cron", hour=13, minute=15, args=['15'])
+scheduler.add_job(func=check_and_send_notifications, trigger="cron", hour=15, minute=18, args=['15'])
 scheduler.add_job(func=check_and_send_notifications, trigger="cron", hour=22, minute=0, args=['22'])
 
 # Avvia il motore in background
