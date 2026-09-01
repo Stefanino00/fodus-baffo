@@ -1,26 +1,9 @@
-// PANNELLO DEBUG A SCHERMO (temporaneo)
-function debugLog(msg) {
-    let panel = document.getElementById('debug-panel');
-    if (!panel) {
-        panel = document.createElement('div');
-        panel.id = 'debug-panel';
-        panel.style.cssText = 'position:fixed;bottom:0;left:0;right:0;max-height:40vh;overflow-y:auto;background:rgba(0,0,0,0.9);color:#0f0;font-size:11px;font-family:monospace;padding:8px;z-index:99999;white-space:pre-wrap;';
-        document.body.appendChild(panel);
-    }
-    const line = document.createElement('div');
-    line.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
-    panel.appendChild(line);
-    panel.scrollTop = panel.scrollHeight;
-}
-
-window.addEventListener('error', (e) => debugLog(`❌ ERRORE GLOBALE: ${e.message}`));
-window.addEventListener('unhandledrejection', (e) => debugLog(`❌ PROMISE RIFIUTATA: ${e.reason}`));
-
 let currentUser = null;
 let stream = null;
 let capturedBase64 = null;
 
-const VAPID_PUBLIC_KEY = "BCdWDfFOUdE48sgpzDCkzR99SHBDr6fbzdRyKFdYp3ZGJAXRrsB0xz4huC5Hceh9yqANvz3-CgdPgnsPAJr5fn0";
+// LA TUA CHIAVE PUBBLICA VAPID (Incollala qui, mi raccomando!)
+const VAPID_PUBLIC_KEY = "INCOLLA_QUI_LA_CHIAVE_PUBBLICA";
 
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -33,14 +16,9 @@ function urlBase64ToUint8Array(base64String) {
     return outputArray;
 }
 
+// Registrazione pulita e invisibile del Service Worker
 if ('serviceWorker' in navigator) {
-    debugLog('Registrando service worker...');
-    // FIX SCOPE: Registriamo il SW dalla root!
-    navigator.serviceWorker.register('/sw.js')
-        .then((reg) => debugLog(`✅ SW registrato, scope: ${reg.scope}`))
-        .catch(err => debugLog(`❌ Registrazione SW fallita: ${err.message}`));
-} else {
-    debugLog('❌ serviceWorker non supportato qui');
+    navigator.serviceWorker.register('/sw.js').catch(err => console.error(err));
 }
 
 function setButtonLoading(btn, isLoading, loadingText = "Attendi...") {
@@ -78,48 +56,45 @@ async function checkStatus() {
     const status = await res.json();
     currentUser = status.user;
     if (!currentUser.soprannome) return showView('view-onboarding');
+
     // Popola Home Page
     const s = status.stats;
     document.getElementById('stat-photos-today').innerText = `${s.photos_today}/${s.total_users}`;
     document.getElementById('stat-days-passed').innerText = `Giorno ${s.days_passed}`;
 
-    // Barra di avanzamento
     const progressPct = Math.min(100, (s.days_passed / s.total_days) * 100);
     const progressBar = document.getElementById('progress-bar-fill');
     if (progressBar) progressBar.style.width = `${progressPct}%`;
     
-    // Gestione Colore Countdown
     const pill = document.getElementById('countdown-pill');
     pill.innerText = `${s.days_remaining} gg a Natale`;
-    
     if (s.days_remaining <= 15) pill.style.backgroundColor = 'var(--color-danger)';
     else if (s.days_remaining <= 31) pill.style.backgroundColor = 'var(--color-medium)';
     else pill.style.backgroundColor = 'var(--color-safe)';
-    // BYPASS PREVIEW SEGRETAMENTE (Il pezzo che mancava!)
+
+    const actionCard = document.getElementById('home-action-card');
     const urlParams = new URLSearchParams(window.location.search);
     const isPreview = urlParams.get('preview') === '1' && currentUser.is_admin;
-    const actionCard = document.getElementById('home-action-card');
-    // Mostra il bottone di test notifiche a chiunque sia admin, indipendentemente dall'URL
-    if (currentUser.is_admin) {
-        document.getElementById('notif-test-controls')?.classList.remove('hidden');
+
+    // GESTIONE BANNER NOTIFICHE
+    const notifPrompt = document.getElementById('notification-prompt');
+    if ('Notification' in window && Notification.permission === 'default') {
+        notifPrompt.classList.remove('hidden');
+    } else {
+        notifPrompt.classList.add('hidden');
     }
-        
-    // Se la sfida non è iniziata (e non sei in modalità preview)
+
     if (!status.sfida_iniziata && !isPreview) {
         actionCard.innerHTML = `<h3>In attesa... ⏳</h3><p class="stat-desc">Stefano deve sbloccare la sfida.</p>`;
         if (currentUser.is_admin) document.getElementById('admin-controls').classList.remove('hidden');
     } 
-    // Se la sfida è iniziata (o sei in preview) e HA già fatto la foto
     else if (status.has_photo_today) {
         actionCard.innerHTML = `<h3>Grande! 🎉</h3><p class="stat-desc">Hai già fatto la tua foto oggi.</p>`;
     } 
-// Se NON ha ancora fatto la foto
     else {
         const hour = new Date().getHours();
-        const urgent = hour >= 20; // dopo le 20 diventa urgente — cambia soglia se vuoi
-        const urgencyText = urgent
-            ? "⏰ Ultime ore prima che scada la giornata!"
-            : "Non dimenticare il tuo scatto di oggi";
+        const urgent = hour >= 20; 
+        const urgencyText = urgent ? "⏰ Ultime ore prima che scada la giornata!" : "Non dimenticare il tuo scatto di oggi";
 
         actionCard.innerHTML = `
             <h3>Tocca a te! 📸</h3>
@@ -127,15 +102,9 @@ async function checkStatus() {
             <button id="btn-go-camera" class="btn-primary ${urgent ? 'pulse-cta' : ''}">Scatta la foto di oggi</button>
         `;
         document.getElementById('btn-go-camera').addEventListener('click', () => {
-            
-            // FIX FANTASMA: sagoma ricalcolata per il nuovo formato camera (4:5 invece di 9:16)
             const defaultGhost = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgMTAwMCI+PGVsbGlwc2UgY3g9IjQwMCIgY3k9IjM5MSIgcng9IjIwMCIgcnk9IjE4OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI4IiBzdHJva2UtZGFzaGFycmF5PSIxNSwxNSIgb3BhY2l0eT0iMC44Ii8+PHBhdGggZD0iTTExMSwxMDAwIEMxMTEsNzQyIDI0NCw2NjQgNDAwLDY2NCBDNTU2LDY2NCA2ODksNzQyIDY4OSwxMDAwIiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjgiIHN0cm9rZS1kYXNoYXJyYXk9IjE1LDE1IiBvcGFjaXR5PSIwLjgiLz48L3N2Zz4=";
-            
             const finalGhost = status.ghost_url ? status.ghost_url : defaultGhost;
-            
-            // Usiamo i doppi apici per proteggere l'url
             document.getElementById('ghost-overlay').style.backgroundImage = `url("${finalGhost}")`;
-            
             showView('view-camera');
             startCamera();
         });
@@ -143,55 +112,40 @@ async function checkStatus() {
     showView('view-home');
 }
 
-// ADMIN UNLOCK
+// EVENTO ISCRIZIONE NOTIFICHE (Dal nuovo Banner)
+document.getElementById('btn-enable-notif')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btn-enable-notif');
+    setButtonLoading(btn, true, "Attivazione...");
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            const reg = await navigator.serviceWorker.ready;
+            let sub = await reg.pushManager.getSubscription();
+            if (!sub) {
+                sub = await reg.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                });
+            }
+            // Invia l'iscrizione al server
+            await fetch('/api/subscribe', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(sub)
+            });
+            // Ricarica la UI per nascondere il banner azzurro
+            checkStatus();
+        }
+    } catch (err) {
+        console.error("Errore notifiche:", err);
+    } finally {
+        setButtonLoading(btn, false);
+    }
+});
+
 document.getElementById('btn-unlock-challenge')?.addEventListener('click', async () => {
     await fetch('/api/admin/start-challenge', {method: 'POST'});
     checkStatus();
-});
-
-document.getElementById('btn-test-notification')?.addEventListener('click', async () => {
-    debugLog('--- Click bottone notifica REMOTE ---');
-    
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-        return debugLog('❌ Push non supportato in questo browser.');
-    }
-
-    try {
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') return debugLog('❌ Permesso negato.');
-        
-        debugLog('Attendo SW ready...');
-        const reg = await navigator.serviceWorker.ready;
-        
-        debugLog('Richiedo iscrizione Push ai server Apple/Google...');
-        let sub = await reg.pushManager.getSubscription();
-        if (!sub) {
-            sub = await reg.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-            });
-        }
-        
-        debugLog('Invio iscrizione al server Hetzner...');
-        await fetch('/api/subscribe', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(sub)
-        });
-        
-        debugLog('✅ Iscritto! Ora chiedo al server di sparare la notifica...');
-        const res = await fetch('/api/admin/test-push', { method: 'POST' });
-        
-        if (res.ok) {
-            debugLog('✅ Il server ha spedito la notifica con successo!');
-        } else {
-            const err = await res.json();
-            debugLog(`❌ Errore server: ${err.error}`);
-        }
-        
-    } catch (err) {
-        debugLog(`❌ ERRORE: ${err.message}`);
-    }
 });
 
 document.getElementById('btn-save-nickname').addEventListener('click', async () => {
@@ -203,10 +157,7 @@ document.getElementById('btn-save-nickname').addEventListener('click', async () 
 async function startCamera() {
     try {
         stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
-                facingMode: "user",
-                aspectRatio: { ideal: 9/16 }
-            }, 
+            video: { facingMode: "user", aspectRatio: { ideal: 9/16 } }, 
             audio: false 
         });
         const video = document.getElementById('camera-stream');
@@ -215,12 +166,11 @@ async function startCamera() {
         document.getElementById('camera-canvas').classList.add('hidden');
         document.getElementById('btn-capture').classList.remove('hidden');
         document.getElementById('retake-actions').classList.add('hidden');
-
     } catch (err) {
         alert("Errore fotocamera. Controlla i permessi.");
     }
 }
-// FIX: Nessun ritaglio manuale — cattura il frame intero, il crop lo fa sempre il CSS (object-fit: cover)
+
 document.getElementById('btn-capture').addEventListener('click', () => {
     const video = document.getElementById('camera-stream');
     const canvas = document.getElementById('camera-canvas');
@@ -228,25 +178,19 @@ document.getElementById('btn-capture').addEventListener('click', () => {
     const flash = document.getElementById('screen-flash');
 
     flash.classList.add('flash-active');
-
     setTimeout(() => {
-        // Usa le dimensioni REALI del video così come sono, senza forzare 720x1280
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
         capturedBase64 = canvas.toDataURL('image/webp', 0.8); 
 
         video.classList.add('hidden');
         canvas.classList.remove('hidden');
         document.getElementById('btn-capture').classList.add('hidden');
         document.getElementById('retake-actions').classList.remove('hidden');
-
         flash.classList.remove('flash-active');
-        
     }, 150);
 });
 
@@ -271,7 +215,6 @@ document.getElementById('btn-upload').addEventListener('click', async () => {
     }
 });
 
-// CALENDARIO
 document.getElementById('btn-open-calendar').addEventListener('click', async () => {
     const btn = document.getElementById('btn-open-calendar');
     setButtonLoading(btn, true, "Carico...");
@@ -291,11 +234,10 @@ const GIORNI_IT = ["L","M","M","G","V","S","D"];
 function renderCalendar(data) {
     const container = document.getElementById('calendar-container');
     container.innerHTML = '';
-
     const today = data.today;
     const dayKeys = Object.keys(data.days).sort();
-
     const months = {};
+    
     dayKeys.forEach(key => {
         const d = new Date(key + 'T00:00:00');
         const mk = `${d.getFullYear()}-${d.getMonth()}`;
@@ -306,12 +248,11 @@ function renderCalendar(data) {
     Object.values(months).forEach(m => {
         const monthBlock = document.createElement('div');
         monthBlock.className = 'month-block';
-
         const title = document.createElement('div');
         title.className = 'month-title';
         title.innerText = `${MESI_IT[m.month]} ${m.year}`;
         monthBlock.appendChild(title);
-
+        
         const weekdaysRow = document.createElement('div');
         weekdaysRow.className = 'calendar-grid weekday-row';
         GIORNI_IT.forEach(g => {
@@ -321,28 +262,25 @@ function renderCalendar(data) {
             weekdaysRow.appendChild(cell);
         });
         monthBlock.appendChild(weekdaysRow);
-
+        
         const grid = document.createElement('div');
         grid.className = 'calendar-grid';
-
         const firstDay = new Date(m.days[0] + 'T00:00:00');
         let firstWeekday = firstDay.getDay();
-        firstWeekday = (firstWeekday === 0) ? 6 : firstWeekday - 1; // Lunedì = 0
+        firstWeekday = (firstWeekday === 0) ? 6 : firstWeekday - 1; 
         for (let i = 0; i < firstWeekday; i++) {
             const empty = document.createElement('div');
             empty.className = 'day-cell empty';
             grid.appendChild(empty);
         }
-
+        
         m.days.forEach(key => {
             const info = data.days[key];
             const dayNum = parseInt(key.split('-')[2]);
-
             const cell = document.createElement('div');
             cell.className = 'day-cell';
             cell.classList.add(key < today ? 'past' : 'upcoming');
             if (key === today) cell.classList.add('today');
-
             cell.innerHTML = `<span class="day-number">${dayNum}</span>`;
             if (info.count > 0) {
                 cell.innerHTML += `<span class="day-count">${info.count}</span>`;
@@ -351,11 +289,9 @@ function renderCalendar(data) {
             }
             grid.appendChild(cell);
         });
-
         monthBlock.appendChild(grid);
         container.appendChild(monthBlock);
     });
-
     const detailBox = document.createElement('div');
     detailBox.id = 'day-detail';
     container.appendChild(detailBox);
@@ -365,14 +301,12 @@ function showDayPhotos(dateKey, photos) {
     const detailBox = document.getElementById('day-detail');
     if (!photos.length) return;
     const [y, mo, d] = dateKey.split('-');
-
     const photosHtml = photos.map(p => `
         <div class="photo-item">
             <img src="${p.url}">
             <div class="photo-author">${p.author_name} - ${p.time}</div>
         </div>
     `).join('');
-
     detailBox.innerHTML = `
         <div class="day-title">${d}/${mo}/${y}</div>
         <div class="photo-grid">${photosHtml}</div>
