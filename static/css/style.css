@@ -422,3 +422,19 @@ input::placeholder { color: #C7C7CC; font-weight: 400; }
     opacity: 1;
     transition: none; /* Appare all'istante, senza transizioni */
 }
+
+.progress-bar-track {
+    width: 100%;
+    height: 8px;
+    background: var(--primary-light);
+    border-radius: 20px;
+    overflow: hidden;
+    margin: 10px 0 6px;
+}
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    border-radius: 20px;
+    width: 0%;
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
