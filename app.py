@@ -279,47 +279,48 @@ def admin_test_push():
 # AUTOMAZIONE NOTIFICHE (12:00 - 19:00 - 22:00)
 # ==========================================
 def check_and_send_notifications(time_slot):
-    # Usiamo il contesto dell'app per poter interrogare il database
-    with app.app_context():
-        today = datetime.utcnow().date()
-        users = User.query.all()
-        
-        # L'escalation dei messaggi in base all'orario
-        messages = {
-            '12': "🥸 Ricordati la foto del baffo! Hai tempo fino a stasera.",
-            '15': "🧪 TEST DELLE 15:05! Se leggi questo, il cronjob funziona perfettamente!",
-            '19': "🚨 LA FOTO DEL BAFFO! Dai entra e scattala!",
-            '22': "⚠️ MANDA LA FOTO DEL BAFFO! Ultima chiamata prima di mezzanotte! 🤬"
-        }
-        testo_notifica = messages.get(time_slot, "È ora di fare la foto!")
+    print(f"⏰ [SCHEDULER] Sveglia! Avvio controllo notifiche per le ore {time_slot}...")
+    try:
+        with app.app_context():
+            today = datetime.utcnow().date()
+            users = User.query.all()
+            print(f"👥 [SCHEDULER] Trovati {len(users)} utenti nel database.")
+            
+            messages = {
+                '12': "🥸 Ricordati la foto del baffo! Hai tempo fino a stasera.",
+                '15': "🧪 TEST SCHEDULER! Se leggi questo, funziona!",
+                '19': "🚨 LA FOTO DEL BAFFO! Dai entra e scattala!",
+                '22': "⚠️ MANDA LA FOTO DEL BAFFO! Ultima chiamata prima di mezzanotte! 🤬"
+            }
+            testo_notifica = messages.get(time_slot, "È ora di fare la foto!")
 
-        for user in users:
-            # Se l'utente non ha le notifiche attive, salta
-            if not user.push_subscription:
-                continue
-            
-            # Controlla se ha GIA' fatto la foto oggi
-            has_photo = Photo.query.filter_by(user_id=user.id, date_created=today).first()
-            
-            # SE NON L'HA FATTA -> SPARA LA NOTIFICA
-            if not has_photo:
-                try:
+            for user in users:
+                if not user.push_subscription:
+                    print(f"🚫 [SCHEDULER] {user.nome} NON ha le notifiche attive.")
+                    continue
+                
+                has_photo = Photo.query.filter_by(user_id=user.id, date_created=today).first()
+                
+                if not has_photo:
+                    print(f"📨 [SCHEDULER] Tento l'invio a {user.nome}...")
                     webpush(
                         subscription_info=json.loads(user.push_subscription),
                         data=testo_notifica,
                         vapid_private_key=VAPID_PRIVATE_KEY,
                         vapid_claims=VAPID_CLAIMS
                     )
-                    print(f"Notifica delle {time_slot}:00 inviata a {user.nome}")
-                except Exception as ex:
-                    print(f"Errore invio notifica a {user.nome}: {ex}")
+                    print(f"✅ [SCHEDULER] Inviata a {user.nome}!")
+                else:
+                    print(f"📸 [SCHEDULER] {user.nome} ha già scattato. Salto.")
+    except Exception as e:
+        print(f"❌ [SCHEDULER] ERRORE CRITICO: {e}")
 
 # Configurazione dello Scheduler (fuso orario italiano)
 scheduler = BackgroundScheduler(timezone="Europe/Rome")
 
 # Imposta gli orari esatti in cui far partire i controlli
 scheduler.add_job(func=check_and_send_notifications, trigger="cron", hour=12, minute=0, args=['12'])
-scheduler.add_job(func=check_and_send_notifications, trigger="cron", hour=15, minute=6, args=['15'])
+scheduler.add_job(func=check_and_send_notifications, trigger="cron", hour=15, minute=10, args=['15'])
 scheduler.add_job(func=check_and_send_notifications, trigger="cron", hour=22, minute=0, args=['22'])
 
 # Avvia il motore in background
