@@ -2,6 +2,17 @@ let currentUser = null;
 let stream = null;
 let capturedBase64 = null;
 
+function setButtonLoading(btn, isLoading, loadingText = "Attendi...") {
+    if (isLoading) {
+        btn.dataset.originalText = btn.innerHTML;
+        btn.innerHTML = loadingText;
+        btn.disabled = true;
+    } else {
+        btn.innerHTML = btn.dataset.originalText || btn.innerHTML;
+        btn.disabled = false;
+    }
+}
+
 function showView(viewId) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.getElementById(viewId).classList.add('active');
