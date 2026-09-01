@@ -6,6 +6,8 @@ from models import db, User, Photo, Comment, Settings
 import threading # <-- AGGIUNGI QUESTO
 from pywebpush import webpush, WebPushException
 import json
+import atexit
+from apscheduler.schedulers.background import BackgroundScheduler
 from pywebpush import webpush, WebPushException
 
 VAPID_PUBLIC_KEY = "BCdWDfFOUdE48sgpzDCkzR99SHBDr6fbzdRyKFdYp3ZGJAXRrsB0xz4huC5Hceh9yqANvz3-CgdPgnsPAJr5fn0"
@@ -272,6 +274,58 @@ def admin_test_push():
     threading.Timer(15.0, delayed_push, args=[user.push_subscription]).start()
     
     return jsonify({'success': True})
+
+# ==========================================
+# AUTOMAZIONE NOTIFICHE (12:00 - 19:00 - 22:00)
+# ==========================================
+def check_and_send_notifications(time_slot):
+    # Usiamo il contesto dell'app per poter interrogare il database
+    with app.app_context():
+        today = datetime.utcnow().date()
+        users = User.query.all()
+        
+        # L'escalation dei messaggi in base all'orario
+        messages = {
+            '12': "🥸 Ricordati la foto del baffo! Hai tempo fino a stasera.",
+            '19': "🚨 LA FOTO DEL BAFFO! Dai entra e scattala!",
+            '22': "⚠️ MANDA LA FOTO DEL BAFFO! Ultima chiamata prima di mezzanotte! 🤬"
+        }
+        testo_notifica = messages.get(time_slot, "È ora di fare la foto!")
+
+        for user in users:
+            # Se l'utente non ha le notifiche attive, salta
+            if not user.push_subscription:
+                continue
+            
+            # Controlla se ha GIA' fatto la foto oggi
+            has_photo = Photo.query.filter_by(user_id=user.id, date_created=today).first()
+            
+            # SE NON L'HA FATTA -> SPARA LA NOTIFICA
+            if not has_photo:
+                try:
+                    webpush(
+                        subscription_info=json.loads(user.push_subscription),
+                        data=testo_notifica,
+                        vapid_private_key=VAPID_PRIVATE_KEY,
+                        vapid_claims=VAPID_CLAIMS
+                    )
+                    print(f"Notifica delle {time_slot}:00 inviata a {user.nome}")
+                except Exception as ex:
+                    print(f"Errore invio notifica a {user.nome}: {ex}")
+
+# Configurazione dello Scheduler (fuso orario italiano)
+scheduler = BackgroundScheduler(timezone="Europe/Rome")
+
+# Imposta gli orari esatti in cui far partire i controlli
+scheduler.add_job(func=check_and_send_notifications, trigger="cron", hour=12, minute=0, args=['12'])
+scheduler.add_job(func=check_and_send_notifications, trigger="cron", hour=19, minute=0, args=['19'])
+scheduler.add_job(func=check_and_send_notifications, trigger="cron", hour=22, minute=0, args=['22'])
+
+# Avvia il motore in background
+scheduler.start()
+
+# Ferma lo scheduler se il server si spegne per evitare processi fantasma
+atexit.register(lambda: scheduler.shutdown())
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5040, debug=True)
