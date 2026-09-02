@@ -344,4 +344,39 @@ input::placeholder { color: #C7C7CC; font-weight: 400; }
 .success-overlay.active { opacity: 1; pointer-events: all; }
 .success-check { font-size: 4rem; animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .success-text { font-size: 1.3rem; font-weight: 800; color: var(--text-main); }
+
+
+/* =========================================
+   NUOVE FUNZIONI UI
+   ========================================= */
+
+/* Blocco rotazione schermo orizzontale */
+#landscape-blocker { display: none; position: fixed; inset: 0; background: var(--bg-panna); z-index: 99999; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; color: var(--primary); text-align: center; line-height: 1.4; }
+@media (orientation: landscape) {
+    #landscape-blocker { display: flex; }
+    .app-container { display: none !important; }
+}
+
+/* Giorno Calendario Completato da tutti (4/4) */
+.day-cell.all-done { background: var(--color-safe); color: #fff; box-shadow: 0 4px 10px rgba(52, 199, 89, 0.35); }
+.day-cell.all-done .day-count { background: #fff; color: var(--color-safe); }
+
+/* Switch Fantasma / Sagoma nella fotocamera */
+.ghost-controls { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); display: flex; background: rgba(0,0,0,0.5); border-radius: 20px; padding: 4px; z-index: 10; backdrop-filter: blur(4px); }
+.ghost-btn { background: transparent; border: none; color: #fff; padding: 6px 12px; font-size: 0.75rem; font-weight: 700; border-radius: 16px; transition: background 0.2s; cursor: pointer; margin: 0; }
+.ghost-btn.active { background: var(--primary); }
+
+/* Popup Modale Foto e Commenti */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; flex-direction: column; align-items: center; padding: 20px; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+.modal.active { opacity: 1; pointer-events: all; }
+.modal-content { width: 100%; max-width: 400px; display: flex; flex-direction: column; position: relative; }
+.modal-close { position: absolute; top: -45px; right: 0; color: #fff; font-size: 2.5rem; cursor: pointer; font-weight: 300; line-height: 1; }
+#modal-img { width: 100%; aspect-ratio: 4/5; object-fit: cover; border-radius: 24px; box-shadow: var(--shadow-card); }
+.modal-author { margin-top: 16px; font-size: 1.2rem; font-weight: 800; color: #fff; text-align: center; }
+.modal-comments { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 20px 0; justify-content: center; min-height: 20px; }
+.comment-chip { background: var(--primary); color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 0.9rem; font-weight: 700; }
+.comment-author-span { font-size: 0.65rem; opacity: 0.8; margin-left: 4px; }
+.comment-input-area { display: flex; gap: 8px; align-items: center; }
+#comment-input { margin-bottom: 0; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; flex: 1; }
+#comment-input::placeholder { color: rgba(255,255,255,0.5); }
 @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 60% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); } }
