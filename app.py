@@ -177,17 +177,26 @@ def get_status():
 def get_calendar():
     start_date = date(2026, 9, 1)
     end_date = date(2026, 12, 24)
-    today = datetime.utcnow().date()
+    today = datetime.now().date() # <-- Ora usa now()
+    
     photos = Photo.query.filter(Photo.date_created >= start_date, Photo.date_created <= end_date).order_by(Photo.timestamp.asc()).all()
     photos_by_date = {}
+    
     for p in photos:
         key = p.date_created.isoformat()
+        
+        # Recupera i commenti per questa foto
+        comments = Comment.query.filter_by(photo_id=p.id).all()
+        comments_list = [{'word': c.word, 'author_name': User.query.get(c.user_id).soprannome or User.query.get(c.user_id).nome} for c in comments]
+        
         photos_by_date.setdefault(key, []).append({
             'photo_id': p.id,
             'author_name': p.author.soprannome or p.author.nome,
             'url': f"/static/uploads/{p.filename}",
-            'time': p.timestamp.strftime('%H:%M')
+            'time': p.timestamp.strftime('%H:%M'),
+            'comments': comments_list
         })
+        
     days = {}
     current = start_date
     while current <= end_date:
@@ -195,8 +204,8 @@ def get_calendar():
         day_photos = photos_by_date.get(key, [])
         days[key] = {'count': len(day_photos), 'photos': day_photos}
         current += timedelta(days=1)
+        
     return jsonify({'start_date': start_date.isoformat(), 'end_date': end_date.isoformat(), 'today': today.isoformat(), 'days': days})
-
 # AUTOMAZIONE NOTIFICHE
 def check_and_send_notifications(time_slot):
     with app.app_context():
