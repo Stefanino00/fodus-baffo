@@ -376,20 +376,24 @@ checkStatus();
 
 let currentPhotoIdForComment = null;
 
-// Sostituisci il vecchio photosHtml dentro showDayPhotos con questo:
+let currentPhotoIdForComment = null;
+
 function showDayPhotos(dateKey, photos) {
     const detailBox = document.getElementById('day-detail');
     if (!photos.length) return;
     const [y, mo, d] = dateKey.split('-');
+    
     const photosHtml = photos.map(p => {
-        const commentsJson = JSON.stringify(p.comments).replace(/"/g, '&quot;');
+        // FIX: Codifichiamo il JSON in modo sicuro così le virgolette non spaccano l'HTML
+        const commentsStr = encodeURIComponent(JSON.stringify(p.comments));
         return `
-            <div class="photo-item" onclick="openPhotoModal(${p.photo_id}, '${p.url}', '${p.author_name}', ${commentsJson})" style="cursor:pointer;">
+            <div class="photo-item" onclick="openPhotoModal(${p.photo_id}, '${p.url}', '${p.author_name}', decodeURIComponent('${commentsStr}'))" style="cursor:pointer;">
                 <img src="${p.url}">
                 <div class="photo-author">${p.author_name} - ${p.time}</div>
             </div>
         `;
     }).join('');
+    
     detailBox.innerHTML = `
         <div class="day-title">${d}/${mo}/${y} <span style="font-size:0.8rem; color:var(--text-muted); font-weight:normal; margin-left:8px;">(Tocca una foto per ingrandirla)</span></div>
         <div class="photo-grid">${photosHtml}</div>
@@ -398,32 +402,44 @@ function showDayPhotos(dateKey, photos) {
 }
 
 // Logica Apertura Popup
-// Logica Apertura Popup
-window.openPhotoModal = function(photoId, url, author, comments) {
+window.openPhotoModal = function(photoId, url, author, commentsStr) {
     const modal = document.getElementById('photo-modal');
-    modal.classList.remove('hidden'); // <-- FIX: Rimuove il blocco visivo CSS
-    
-    // Attende 10 millisecondi per permettere al browser di registrare la rimozione di 'hidden'
+    modal.classList.remove('hidden');
     setTimeout(() => modal.classList.add('active'), 10);
     
     document.getElementById('modal-img').src = url;
     document.getElementById('modal-author').innerText = author;
     currentPhotoIdForComment = photoId;
     
+    const comments = JSON.parse(commentsStr);
     const commentsContainer = document.getElementById('modal-comments');
     commentsContainer.innerHTML = comments.map(c => `<div class="comment-chip">${c.word} <span class="comment-author-span">- ${c.author_name}</span></div>`).join('');
+    
+    // Controlli di sicurezza lato interfaccia
+    const myName = currentUser.soprannome || currentUser.nome;
+    const isMyPhoto = (author === myName);
+    const alreadyCommented = comments.some(c => c.author_name === myName);
+    
+    const inputArea = document.querySelector('.comment-input-area');
     document.getElementById('comment-input').value = '';
+    
+    // Se è la tua foto, o se hai già commentato, nascondi la barra per scrivere!
+    if (isMyPhoto || alreadyCommented) {
+        inputArea.style.display = 'none';
+    } else {
+        inputArea.style.display = 'flex';
+    }
 };
 
 document.getElementById('modal-close').onclick = () => {
     const modal = document.getElementById('photo-modal');
     modal.classList.remove('active');
-    // Rimette la classe hidden dopo che la sfumatura di chiusura (200ms) è terminata
     setTimeout(() => modal.classList.add('hidden'), 200);
 };
 
 document.getElementById('btn-send-comment').onclick = async () => {
-    const word = document.getElementById('comment-input').value.trim();
+    const inputEl = document.getElementById('comment-input');
+    const word = inputEl.value.trim();
     if (!word || word.includes(' ') || word.length > 20) {
         return alert("Inserisci una sola parola! (Senza spazi, max 20 caratteri)");
     }
@@ -436,9 +452,33 @@ document.getElementById('btn-send-comment').onclick = async () => {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({photo_id: currentPhotoIdForComment, word: word})
         });
+        
         if (res.ok) {
-            document.getElementById('photo-modal').classList.remove('active');
-            document.getElementById('btn-open-calendar').click(); // Ricarica il calendario in automatico
+            const data = await res.json();
+            
+            // 1. Aggiunge il commento a schermo all'istante
+            const commentsContainer = document.getElementById('modal-comments');
+            commentsContainer.innerHTML += `<div class="comment-chip">${data.word} <span class="comment-author-span">- ${data.author_name}</span></div>`;
+            
+            // 2. Svuota e nasconde la barra (hai finito i commenti a disposizione!)
+            inputEl.value = '';
+            document.querySelector('.comment-input-area').style.display = 'none';
+            
+            // 3. Usa il success-overlay gigante per dirti che è andata a buon fine
+            const overlay = document.getElementById('success-overlay');
+            const overlayText = document.querySelector('.success-text');
+            const oldText = overlayText.innerText;
+            overlayText.innerText = "Commento Inviato! 💬";
+            overlay.classList.add('active');
+            
+            setTimeout(() => {
+                overlay.classList.remove('active');
+                setTimeout(() => overlayText.innerText = oldText, 300); // Ripristina "Inviata!" per la fotocamera
+            }, 1300);
+
+            // 4. Aggiorna i dati del calendario silenziosamente in background
+            fetch('/api/calendar').then(r => r.json()).then(d => renderCalendar(d));
+            
         } else {
             const err = await res.json();
             alert(err.error || "Errore inserimento commento");
