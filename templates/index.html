@@ -93,6 +93,12 @@
 
         <section id="view-camera" class="view">
             <div class="camera-wrapper">
+                <!-- Selettore Fantasma / Sagoma -->
+                <div class="ghost-controls" id="ghost-controls">
+                    <button id="btn-ghost-photo" class="ghost-btn">Foto di ieri</button>
+                    <button id="btn-ghost-shape" class="ghost-btn">Sagoma</button>
+                </div>
+
                 <video id="camera-stream" autoplay playsinline muted></video>
                 <canvas id="camera-canvas" class="hidden"></canvas>
                 <div id="ghost-overlay" class="ghost-overlay"></div>
@@ -122,6 +128,27 @@
     <div id="success-overlay" class="success-overlay hidden">
         <div class="success-check">✅</div>
         <div class="success-text">Inviata! 🎉</div>
+    </div>
+
+    <!-- Blocco Landscape -->
+    <div id="landscape-blocker">
+        <div>🔄<br>Gira il telefono<br>in verticale!</div>
+    </div>
+
+    <!-- Modale per Foto e Commenti -->
+    <div id="photo-modal" class="modal hidden">
+        <div class="modal-content">
+            <span id="modal-close" class="modal-close">&times;</span>
+            <img id="modal-img" src="">
+            <div id="modal-author" class="modal-author"></div>
+            
+            <div id="modal-comments" class="modal-comments"></div>
+            
+            <div class="comment-input-area">
+                <input type="text" id="comment-input" maxlength="20" placeholder="1 parola per descriverla...">
+                <button id="btn-send-comment" class="btn-primary" style="padding: 10px; width: auto; flex-shrink: 0;">Invia</button>
+            </div>
+        </div>
     </div>
 </body>
 </html>
