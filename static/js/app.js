@@ -376,7 +376,7 @@ checkStatus();
 
 let currentPhotoIdForComment = null;
 
-let currentPhotoIdForComment = null;
+
 
 function showDayPhotos(dateKey, photos) {
     const detailBox = document.getElementById('day-detail');
