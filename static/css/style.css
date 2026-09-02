@@ -316,7 +316,13 @@ input::placeholder { color: #C7C7CC; font-weight: 400; }
 .day-title::after { content: ''; flex: 1; height: 1px; background: var(--border-soft); margin-left: 12px; }
 .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .photo-item { position: relative; border-radius: 16px; overflow: hidden; aspect-ratio: 4/5; box-shadow: var(--shadow-card); background: var(--surface); }
-.photo-item img { width: 100%; height: 100%; object-fit: cover; }
+.photo-item img { 
+    width: 100%; height: 100%; object-fit: cover; 
+    /* Disabilita il menu "Salva immagine" nativo di iOS */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    pointer-events: none; 
+}
 .photo-author { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%); color: #fff; padding: 20px 10px 10px 10px; font-size: 0.8rem; font-weight: 600; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
 /* MISC */
