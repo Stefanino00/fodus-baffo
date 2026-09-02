@@ -398,8 +398,14 @@ function showDayPhotos(dateKey, photos) {
 }
 
 // Logica Apertura Popup
+// Logica Apertura Popup
 window.openPhotoModal = function(photoId, url, author, comments) {
-    document.getElementById('photo-modal').classList.add('active');
+    const modal = document.getElementById('photo-modal');
+    modal.classList.remove('hidden'); // <-- FIX: Rimuove il blocco visivo CSS
+    
+    // Attende 10 millisecondi per permettere al browser di registrare la rimozione di 'hidden'
+    setTimeout(() => modal.classList.add('active'), 10);
+    
     document.getElementById('modal-img').src = url;
     document.getElementById('modal-author').innerText = author;
     currentPhotoIdForComment = photoId;
@@ -410,7 +416,10 @@ window.openPhotoModal = function(photoId, url, author, comments) {
 };
 
 document.getElementById('modal-close').onclick = () => {
-    document.getElementById('photo-modal').classList.remove('active');
+    const modal = document.getElementById('photo-modal');
+    modal.classList.remove('active');
+    // Rimette la classe hidden dopo che la sfumatura di chiusura (200ms) è terminata
+    setTimeout(() => modal.classList.add('hidden'), 200);
 };
 
 document.getElementById('btn-send-comment').onclick = async () => {
