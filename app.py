@@ -173,6 +173,40 @@ def get_status():
         }
     })
 
+@app.route('/api/comment', methods=['POST'])
+def add_comment():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Non autorizzato'}), 401
+    
+    data = request.json or {}
+    photo_id = data.get('photo_id')
+    word = data.get('word', '').strip()
+    
+    if ' ' in word or len(word) > 20 or not word:
+        return jsonify({'error': 'Il commento deve essere una sola parola (max 20 lettere)'}), 400
+        
+    photo = Photo.query.get(photo_id)
+    if not photo:
+        return jsonify({'error': 'Foto non trovata'}), 404
+        
+    # REGOLA 1: Non puoi commentare la tua foto
+    if photo.user_id == user_id:
+        return jsonify({'error': 'Non puoi commentare la tua foto!'}), 403
+        
+    # REGOLA 2: Solo un commento per utente su ogni foto
+    existing = Comment.query.filter_by(photo_id=photo_id, user_id=user_id).first()
+    if existing:
+        return jsonify({'error': 'Hai già commentato questa foto!'}), 403
+        
+    comment = Comment(photo_id=photo_id, user_id=user_id, word=word)
+    db.session.add(comment)
+    db.session.commit()
+    
+    # Restituiamo il nome per aggiornare il popup in tempo reale
+    author_name = User.query.get(user_id).soprannome or User.query.get(user_id).nome
+    return jsonify({'success': True, 'word': word, 'author_name': author_name})
+
 @app.route('/api/calendar', methods=['GET'])
 def get_calendar():
     start_date = date(2026, 9, 1)
