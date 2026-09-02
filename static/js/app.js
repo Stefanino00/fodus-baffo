@@ -134,10 +134,32 @@ async function checkStatus() {
         }, 1000);
 
         document.getElementById('btn-go-camera').addEventListener('click', () => {
-            // FIX: SOLO OVALE DEL VISO CENTRALE
-            const defaultGhost = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgMTAwMCI+PGVsbGlwc2UgY3g9IjQwMCIgY3k9IjQ1MCIgcng9IjIyMCIgcnk9IjMwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI4IiBzdHJva2UtZGFzaGFycmF5PSIxNSwxNSIgb3BhY2l0eT0iMC44Ii8+PC9zdmc+";
-            const finalGhost = status.ghost_url ? status.ghost_url : defaultGhost;
-            document.getElementById('ghost-overlay').style.backgroundImage = `url("${finalGhost}")`;
+            const urlGhostShape = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgMTAwMCI+PGVsbGlwc2UgY3g9IjQwMCIgY3k9IjQ1MCIgcng9IjIyMCIgcnk9IjMwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI4IiBzdHJva2UtZGFzaGFycmF5PSIxNSwxNSIgb3BhY2l0eT0iMC44Ii8+PC9zdmc+";
+            const urlGhostPhoto = status.ghost_url || null;
+            
+            // Setup pulsanti Fantasma/Sagoma
+            const btnPhoto = document.getElementById('btn-ghost-photo');
+            const btnShape = document.getElementById('btn-ghost-shape');
+            
+            btnPhoto.onclick = () => {
+                btnPhoto.classList.add('active'); btnShape.classList.remove('active');
+                document.getElementById('ghost-overlay').style.backgroundImage = urlGhostPhoto ? `url("${urlGhostPhoto}")` : 'none';
+            };
+            btnShape.onclick = () => {
+                btnShape.classList.add('active'); btnPhoto.classList.remove('active');
+                document.getElementById('ghost-overlay').style.backgroundImage = `url("${urlGhostShape}")`;
+            };
+
+            // Se non c'è una foto di ieri, nascondi il bottone "Foto di ieri"
+            if (urlGhostPhoto) {
+                btnPhoto.style.display = 'block';
+                btnPhoto.click(); // Default a foto di ieri
+            } else {
+                btnPhoto.style.display = 'none';
+                btnShape.click(); // Default a sagoma
+            }
+
+            document.getElementById('ghost-overlay').classList.remove('hidden');
             showView('view-camera');
             startCamera();
         });
@@ -215,7 +237,7 @@ document.getElementById('btn-capture').addEventListener('click', () => {
         ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         capturedBase64 = canvas.toDataURL('image/webp', 0.8); 
-
+        document.getElementById('ghost-overlay').classList.add('hidden');
         video.classList.add('hidden');
         canvas.classList.remove('hidden');
         document.getElementById('btn-capture').classList.add('hidden');
@@ -225,6 +247,10 @@ document.getElementById('btn-capture').addEventListener('click', () => {
 });
 
 document.getElementById('btn-retake').addEventListener('click', startCamera);
+document.getElementById('btn-retake').addEventListener('click', () => {
+    document.getElementById('ghost-overlay').classList.remove('hidden');
+    startCamera();
+});
 
 document.getElementById('btn-upload').addEventListener('click', async () => {
     const btn = document.getElementById('btn-upload');
@@ -315,6 +341,7 @@ function renderCalendar(data) {
             if (info.count > 0) {
                 cell.innerHTML += `<span class="day-count">${info.count}</span>`;
                 cell.classList.add('has-photos');
+                if (info.count === 4) cell.classList.add('all-done');
                 cell.addEventListener('click', () => showDayPhotos(key, info.photos));
             }
             grid.appendChild(cell);
@@ -345,3 +372,69 @@ function showDayPhotos(dateKey, photos) {
 }
 
 checkStatus();
+
+
+let currentPhotoIdForComment = null;
+
+// Sostituisci il vecchio photosHtml dentro showDayPhotos con questo:
+function showDayPhotos(dateKey, photos) {
+    const detailBox = document.getElementById('day-detail');
+    if (!photos.length) return;
+    const [y, mo, d] = dateKey.split('-');
+    const photosHtml = photos.map(p => {
+        const commentsJson = JSON.stringify(p.comments).replace(/"/g, '&quot;');
+        return `
+            <div class="photo-item" onclick="openPhotoModal(${p.photo_id}, '${p.url}', '${p.author_name}', ${commentsJson})" style="cursor:pointer;">
+                <img src="${p.url}">
+                <div class="photo-author">${p.author_name} - ${p.time}</div>
+            </div>
+        `;
+    }).join('');
+    detailBox.innerHTML = `
+        <div class="day-title">${d}/${mo}/${y} <span style="font-size:0.8rem; color:var(--text-muted); font-weight:normal; margin-left:8px;">(Tocca una foto per ingrandirla)</span></div>
+        <div class="photo-grid">${photosHtml}</div>
+    `;
+    detailBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Logica Apertura Popup
+window.openPhotoModal = function(photoId, url, author, comments) {
+    document.getElementById('photo-modal').classList.add('active');
+    document.getElementById('modal-img').src = url;
+    document.getElementById('modal-author').innerText = author;
+    currentPhotoIdForComment = photoId;
+    
+    const commentsContainer = document.getElementById('modal-comments');
+    commentsContainer.innerHTML = comments.map(c => `<div class="comment-chip">${c.word} <span class="comment-author-span">- ${c.author_name}</span></div>`).join('');
+    document.getElementById('comment-input').value = '';
+};
+
+document.getElementById('modal-close').onclick = () => {
+    document.getElementById('photo-modal').classList.remove('active');
+};
+
+document.getElementById('btn-send-comment').onclick = async () => {
+    const word = document.getElementById('comment-input').value.trim();
+    if (!word || word.includes(' ') || word.length > 20) {
+        return alert("Inserisci una sola parola! (Senza spazi, max 20 caratteri)");
+    }
+    
+    const btn = document.getElementById('btn-send-comment');
+    setButtonLoading(btn, true, "...");
+    try {
+        const res = await fetch('/api/comment', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({photo_id: currentPhotoIdForComment, word: word})
+        });
+        if (res.ok) {
+            document.getElementById('photo-modal').classList.remove('active');
+            document.getElementById('btn-open-calendar').click(); // Ricarica il calendario in automatico
+        } else {
+            const err = await res.json();
+            alert(err.error || "Errore inserimento commento");
+        }
+    } finally {
+        setButtonLoading(btn, false);
+    }
+};
