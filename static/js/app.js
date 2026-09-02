@@ -190,6 +190,7 @@ document.getElementById('btn-enable-notif')?.addEventListener('click', async () 
         }
     } catch (err) {
         console.error("Errore notifiche:", err);
+        alert("Errore iOS: " + err.message);
     } finally {
         setButtonLoading(btn, false);
     }
