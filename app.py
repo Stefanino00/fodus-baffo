@@ -149,8 +149,8 @@ def get_status():
 
     start_date = date(2026, 9, 1)
     end_date = date(2026, 12, 24)
-    total_days = (end_date - start_date).days
-    days_passed = (today - start_date).days
+    total_days = (end_date - start_date).days + 1
+    days_passed = (today - start_date).days + 1
     days_remaining = (end_date - today).days
 
     return jsonify({
