@@ -16,7 +16,7 @@ class Photo(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     filename = db.Column(db.String(100), nullable=False)
     date_created = db.Column(db.Date, default=datetime.utcnow().date)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=datetime.now)
     comments = db.relationship('Comment', backref='photo', lazy=True, cascade="all, delete-orphan")
 
 class Comment(db.Model):
