@@ -1,8 +1,8 @@
-
 let currentUser = null;
 let stream = null;
 let capturedBase64 = null;
 let midnightInterval = null;
+let currentPhotoIdForComment = null;
 
 const VAPID_PUBLIC_KEY = "BCdWDfFOUdE48sgpzDCkzR99SHBDr6fbzdRyKFdYp3ZGJAXRrsB0xz4huC5Hceh9yqANvz3-CgdPgnsPAPgnsPAJr5fn0";
 
@@ -44,8 +44,12 @@ document.getElementById('btn-login').addEventListener('click', async () => {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({pin})
     });
-    if (res.ok) { currentUser = await res.json(); checkStatus(); } 
-    else { document.getElementById('login-error').innerText = "PIN errato"; }
+    if (res.ok) { 
+        currentUser = await res.json(); 
+        checkStatus(); 
+    } else { 
+        document.getElementById('login-error').innerText = "PIN errato"; 
+    }
 });
 
 async function checkStatus() {
@@ -70,7 +74,6 @@ async function checkStatus() {
     else if (s.days_remaining <= 31) pill.style.backgroundColor = 'var(--color-medium)';
     else pill.style.backgroundColor = 'var(--color-safe)';
 
-    // POPOLA AVATAR UTENTI MANCANTI
     const missingContainer = document.getElementById('missing-users-container');
     if (missingContainer) {
         if (s.missing_users && s.missing_users.length > 0) {
@@ -107,7 +110,6 @@ async function checkStatus() {
         const urgent = hour >= 20; 
         const urgencyText = urgent ? "⏰ Ultime ore prima che scada la giornata!" : "Non dimenticare il tuo scatto di oggi";
 
-        // AGGIUNTO TIMER E ANIMAZIONI BOUNCE/PULSE
         actionCard.innerHTML = `
             <h3 class="bounce-text" style="color: var(--primary);">Tocca a te! 📸</h3>
             <p class="stat-desc">${urgencyText}</p>
@@ -137,7 +139,6 @@ async function checkStatus() {
             const urlGhostShape = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgMTAwMCI+PGVsbGlwc2UgY3g9IjQwMCIgY3k9IjQ1MCIgcng9IjIyMCIgcnk9IjMwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI4IiBzdHJva2UtZGFzaGFycmF5PSIxNSwxNSIgb3BhY2l0eT0iMC44Ii8+PC9zdmc+";
             const urlGhostPhoto = status.ghost_url || null;
             
-            // Setup pulsanti Fantasma/Sagoma
             const btnPhoto = document.getElementById('btn-ghost-photo');
             const btnShape = document.getElementById('btn-ghost-shape');
             
@@ -150,13 +151,12 @@ async function checkStatus() {
                 document.getElementById('ghost-overlay').style.backgroundImage = `url("${urlGhostShape}")`;
             };
 
-            // Se non c'è una foto di ieri, nascondi il bottone "Foto di ieri"
             if (urlGhostPhoto) {
                 btnPhoto.style.display = 'block';
-                btnPhoto.click(); // Default a foto di ieri
+                btnPhoto.click(); 
             } else {
                 btnPhoto.style.display = 'none';
-                btnShape.click(); // Default a sagoma
+                btnShape.click(); 
             }
 
             document.getElementById('ghost-overlay').classList.remove('hidden');
@@ -247,7 +247,6 @@ document.getElementById('btn-capture').addEventListener('click', () => {
     }, 150);
 });
 
-document.getElementById('btn-retake').addEventListener('click', startCamera);
 document.getElementById('btn-retake').addEventListener('click', () => {
     document.getElementById('ghost-overlay').classList.remove('hidden');
     startCamera();
@@ -359,33 +358,8 @@ function showDayPhotos(dateKey, photos) {
     const detailBox = document.getElementById('day-detail');
     if (!photos.length) return;
     const [y, mo, d] = dateKey.split('-');
-    const photosHtml = photos.map(p => `
-        <div class="photo-item">
-            <img src="${p.url}">
-            <div class="photo-author">${p.author_name} - ${p.time}</div>
-        </div>
-    `).join('');
-    detailBox.innerHTML = `
-        <div class="day-title">${d}/${mo}/${y}</div>
-        <div class="photo-grid">${photosHtml}</div>
-    `;
-    detailBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-checkStatus();
-
-
-let currentPhotoIdForComment = null;
-
-
-
-function showDayPhotos(dateKey, photos) {
-    const detailBox = document.getElementById('day-detail');
-    if (!photos.length) return;
-    const [y, mo, d] = dateKey.split('-');
     
     const photosHtml = photos.map(p => {
-        // FIX: Codifichiamo il JSON in modo sicuro così le virgolette non spaccano l'HTML
         const commentsStr = encodeURIComponent(JSON.stringify(p.comments));
         return `
             <div class="photo-item" onclick="openPhotoModal(${p.photo_id}, '${p.url}', '${p.author_name}', decodeURIComponent('${commentsStr}'))" style="cursor:pointer;">
@@ -402,7 +376,6 @@ function showDayPhotos(dateKey, photos) {
     detailBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// Logica Apertura Popup
 window.openPhotoModal = function(photoId, url, author, commentsStr) {
     const modal = document.getElementById('photo-modal');
     modal.classList.remove('hidden');
@@ -416,7 +389,6 @@ window.openPhotoModal = function(photoId, url, author, commentsStr) {
     const commentsContainer = document.getElementById('modal-comments');
     commentsContainer.innerHTML = comments.map(c => `<div class="comment-chip">${c.word} <span class="comment-author-span">- ${c.author_name}</span></div>`).join('');
     
-    // Controlli di sicurezza lato interfaccia
     const myName = currentUser.soprannome || currentUser.nome;
     const isMyPhoto = (author === myName);
     const alreadyCommented = comments.some(c => c.author_name === myName);
@@ -424,7 +396,6 @@ window.openPhotoModal = function(photoId, url, author, commentsStr) {
     const inputArea = document.querySelector('.comment-input-area');
     document.getElementById('comment-input').value = '';
     
-    // Se è la tua foto, o se hai già commentato, nascondi la barra per scrivere!
     if (isMyPhoto || alreadyCommented) {
         inputArea.style.display = 'none';
     } else {
@@ -456,16 +427,12 @@ document.getElementById('btn-send-comment').onclick = async () => {
         
         if (res.ok) {
             const data = await res.json();
-            
-            // 1. Aggiunge il commento a schermo all'istante
             const commentsContainer = document.getElementById('modal-comments');
             commentsContainer.innerHTML += `<div class="comment-chip">${data.word} <span class="comment-author-span">- ${data.author_name}</span></div>`;
             
-            // 2. Svuota e nasconde la barra (hai finito i commenti a disposizione!)
             inputEl.value = '';
             document.querySelector('.comment-input-area').style.display = 'none';
             
-            // 3. Usa il success-overlay gigante per dirti che è andata a buon fine
             const overlay = document.getElementById('success-overlay');
             const overlayText = document.querySelector('.success-text');
             const oldText = overlayText.innerText;
@@ -474,10 +441,9 @@ document.getElementById('btn-send-comment').onclick = async () => {
             
             setTimeout(() => {
                 overlay.classList.remove('active');
-                setTimeout(() => overlayText.innerText = oldText, 300); // Ripristina "Inviata!" per la fotocamera
+                setTimeout(() => overlayText.innerText = oldText, 300);
             }, 1300);
 
-            // 4. Aggiorna i dati del calendario silenziosamente in background
             fetch('/api/calendar').then(r => r.json()).then(d => renderCalendar(d));
             
         } else {
@@ -488,3 +454,5 @@ document.getElementById('btn-send-comment').onclick = async () => {
         setButtonLoading(btn, false);
     }
 };
+
+checkStatus();
