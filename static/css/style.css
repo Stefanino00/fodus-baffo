@@ -386,3 +386,67 @@ input::placeholder { color: #C7C7CC; font-weight: 400; }
 #comment-input { margin-bottom: 0; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; flex: 1; }
 #comment-input::placeholder { color: rgba(255,255,255,0.5); }
 @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 60% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); } }
+
+
+/* =========================================
+   ANIMAZIONE LOGO E CONFETTI
+   ========================================= */
+
+.animated-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    height: 35px;
+    width: 200px;
+    overflow: hidden;
+}
+
+.title-fodus, .title-baffo {
+    position: absolute;
+    font-size: 1.6rem;
+    white-space: nowrap;
+}
+
+/* BAFFO parte al centro e copre FODUS */
+.title-baffo {
+    font-weight: 300;
+    color: var(--accent);
+    z-index: 2;
+    background-color: var(--bg-panna); /* Usa il colore di sfondo per nascondere Fodus */
+    padding: 0 4px;
+    border-radius: 4px;
+    animation: slideBaffo 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    animation-delay: 0.8s; /* Pausa iniziale */
+}
+
+/* FODUS è sotto, invisibile all'inizio */
+.title-fodus {
+    font-weight: 800;
+    color: var(--primary);
+    z-index: 1;
+    animation: slideFodus 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    animation-delay: 0.8s;
+}
+
+@keyframes slideBaffo {
+    0% { transform: translateX(0); background-color: var(--bg-panna); }
+    100% { transform: translateX(45px); background-color: transparent; }
+}
+
+@keyframes slideFodus {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-35px); }
+}
+
+#confetti-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1; /* Sta dietro alla spunta verde */
+}
+
+
