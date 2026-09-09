@@ -6,6 +6,48 @@ let currentPhotoIdForComment = null;
 
 const VAPID_PUBLIC_KEY = "BCdWDfFOUdE48sgpzDCkzR99SHBDr6fbzdRyKFdYp3ZGJAXRrsB0xz4huC5Hceh9yqANvz3-CgdPgnsPAPgnsPAJr5fn0";
 
+// Motore Coriandoli (Confetti)
+function fireConfetti() {
+    const canvas = document.getElementById('confetti-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const particles = [];
+    const colors = ['#007AFF', '#FF6B6B', '#34C759', '#FF9500'];
+
+    for (let i = 0; i < 80; i++) {
+        particles.push({
+            x: canvas.width / 2,
+            y: canvas.height / 2 + 50,
+            r: Math.random() * 6 + 3,
+            dx: Math.random() * 12 - 6,
+            dy: Math.random() * -15 - 5,
+            color: colors[Math.floor(Math.random() * colors.length)]
+        });
+    }
+
+    let animationFrameId;
+    function animate() {
+        animationFrameId = requestAnimationFrame(animate);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+            p.x += p.dx;
+            p.y += p.dy;
+            p.dy += 0.3; // Gravità
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.fill();
+        });
+    }
+    animate();
+    
+    // Ferma l'animazione dopo 2 secondi per risparmiare batteria
+    setTimeout(() => cancelAnimationFrame(animationFrameId), 2000);
+}
+
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
@@ -261,10 +303,16 @@ document.getElementById('btn-upload').addEventListener('click', async () => {
             if (stream) stream.getTracks().forEach(track => track.stop());
             const overlay = document.getElementById('success-overlay');
             overlay.classList.add('active');
+            
+            // --- NUOVE ANIMAZIONI! ---
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]); // Vibrazione stile iOS (se supportata)
+            fireConfetti(); // Spara i coriandoli
+            // -------------------------
+
             setTimeout(() => {
                 overlay.classList.remove('active');
                 checkStatus();
-            }, 1300);
+            }, 1800); // Ho allungato un po' il tempo per far godere l'animazione (da 1300 a 1800)
         }
     } finally {
         setButtonLoading(btn, false);
