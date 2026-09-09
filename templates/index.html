@@ -18,23 +18,24 @@
     <div id="screen-flash"></div>
     <div class="app-container">
         
-        <!-- HEADER AGGIORNATO (Design Pulito, no linea) -->
+        <!-- HEADER ANIMATO -->
         <header class="app-header">
-            <h1>
-                <span class="title-fodus">FODUS</span>
+            <h1 class="animated-logo">
                 <span class="title-baffo">BAFFO</span>
+                <span class="title-fodus">FODUS</span>
             </h1>
         </header>
         
-        <!-- COUNTDOWN SPOSTATO SOTTO L'HEADER -->
         <div style="text-align: center; margin-top: 4px; margin-bottom: 16px;">
             <div id="countdown-pill" class="countdown-badge">Caricamento...</div>
         </div>
 
-        <section id="view-login" class="view active">
-            <div class="card">
+        <!-- LOGIN CENTRATO -->
+        <section id="view-login" class="view active" style="justify-content: center; align-items: center; padding-bottom: 20vh;">
+            <div class="card" style="width: 100%;">
                 <h2>Accesso Sfida</h2>
-                <input type="password" id="pin-input" maxlength="4" placeholder="Inserisci PIN" pattern="\d*">
+                <!-- inputmode="numeric" forza il tastierino grande su iPhone -->
+                <input type="password" id="pin-input" maxlength="4" placeholder="Inserisci PIN" pattern="\d*" inputmode="numeric">
                 <button id="btn-login" class="btn-primary">Entra</button>
                 <p id="login-error" class="error-msg"></p>
             </div>
@@ -126,6 +127,7 @@
 
     
     <div id="success-overlay" class="success-overlay hidden">
+        <canvas id="confetti-canvas"></canvas>
         <div class="success-check">✅</div>
         <div class="success-text">Inviata! 🎉</div>
     </div>
