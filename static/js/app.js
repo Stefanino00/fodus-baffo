@@ -4,6 +4,12 @@ let capturedBase64 = null;
 let midnightInterval = null;
 let currentPhotoIdForComment = null;
 
+let funnyPhrases = ["Bel baffo!"]; // Frase di emergenza se il file non carica
+fetch('/static/phrases.json')
+    .then(res => res.json())
+    .then(data => funnyPhrases = data)
+    .catch(err => console.error("Errore frasi:", err));
+
 const VAPID_PUBLIC_KEY = "BCdWDfFOUdE48sgpzDCkzR99SHBDr6fbzdRyKFdYp3ZGJAXRrsB0xz4huC5Hceh9yqANvz3-CgdPgnsPAPgnsPAJr5fn0";
 
 // Motore Coriandoli (Confetti)
@@ -286,11 +292,23 @@ document.getElementById('btn-capture').addEventListener('click', () => {
         document.getElementById('btn-capture').classList.add('hidden');
         document.getElementById('retake-actions').classList.remove('hidden');
         flash.classList.remove('flash-active');
+        const phraseEl = document.getElementById('funny-phrase-overlay');
+        // Pesca una frase a caso dall'array
+        const randomPhrase = funnyPhrases[Math.floor(Math.random() * funnyPhrases.length)];
+        phraseEl.innerText = randomPhrase;
+        phraseEl.classList.remove('hidden');
+        
+        // Rimuove e riaggiunge la classe per riavviare l'animazione ad ogni scatto
+        phraseEl.classList.remove('show-phrase');
+        void phraseEl.offsetWidth; // Trucco per forzare il reset dell'animazione
+        phraseEl.classList.add('show-phrase');
     }, 150);
 });
 
 document.getElementById('btn-retake').addEventListener('click', () => {
     document.getElementById('ghost-overlay').classList.remove('hidden');
+    document.getElementById('funny-phrase-overlay').classList.remove('show-phrase');
+    document.getElementById('funny-phrase-overlay').classList.add('hidden');
     startCamera();
 });
 
