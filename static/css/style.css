@@ -446,7 +446,13 @@ input::placeholder { color: #C7C7CC; font-weight: 400; }
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: -1; /* Sta dietro alla spunta verde */
+    z-index: 1; /* <-- MODIFICATO: prima era -1 */
+}
+
+/* Aggiungi questo per tenere la spunta verde e il testo DAVANTI ai coriandoli */
+.success-check, .success-text {
+    position: relative;
+    z-index: 10;
 }
 
 /* =========================================
