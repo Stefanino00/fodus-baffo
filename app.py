@@ -12,7 +12,7 @@ from models import db, User, Photo, Comment, Settings
 import threading
 import requests
 import base64
-import google.generativeai as genai
+from google import genai
 import PIL.Image
 import os
 from dotenv import load_dotenv
@@ -249,8 +249,8 @@ def add_comment():
 def analyze_photo_background(photo_id, file_path, app_context):
     with app_context:
         try:
-            # 1. Configura la chiave API
-            genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+            # 1. Inizializza il nuovo Client di Google
+            client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
             
             # 2. Carica l'immagine in memoria
             img = PIL.Image.open(file_path)
@@ -266,8 +266,11 @@ Scala assoluta da 0 a 10:
 Non farti ingannare dal contrasto della pelle o della barba rasata: valuta la LUNGHEZZA dei peli sul labbro superiore.
 Restituisci ESCLUSIVAMENTE un numero intero da 0 a 10. Niente testo."""
 
-            model = genai.GenerativeModel("gemini-1.5-flash")
-            response = model.generate_content([prompt_visivo, img])
+            # Nuova sintassi per generare il contenuto
+            response = client.models.generate_content(
+                model='gemini-1.5-flash',
+                contents=[prompt_visivo, img]
+            )
             
             # 4. Estrai il voto base (0-10)
             score_text = response.text.strip()
