@@ -241,6 +241,37 @@ async function checkStatus() {
     showView('view-home');
 }
 
+
+// ... [codice missing users esistente] ...
+
+    // --- NUOVO: RENDER CLASSIFICA AI ---
+    const rankingContainer = document.getElementById('growth-ranking-container');
+    if (rankingContainer && s.growth_ranking) {
+        rankingContainer.innerHTML = s.growth_ranking.map(user => {
+            if (user.is_processing) {
+                return `
+                <div class="ranking-row is-processing">
+                    <div class="ranking-avatar">${user.iniziali}</div>
+                    <div class="ranking-bar-container">
+                        <div class="ranking-name"><span>${user.nome}</span></div>
+                        <div class="ranking-track"><div class="ranking-fill" style="width: 0%;"></div></div>
+                    </div>
+                    <div class="processing-badge">✂️ Barbiere al lavoro...</div>
+                </div>`;
+            } else {
+                return `
+                <div class="ranking-row">
+                    <div class="ranking-avatar">${user.iniziali}</div>
+                    <div class="ranking-bar-container">
+                        <div class="ranking-name"><span>${user.nome}</span> <span class="ranking-score">${user.score}/100</span></div>
+                        <div class="ranking-track"><div class="ranking-fill" style="width: ${user.score}%;"></div></div>
+                    </div>
+                </div>`;
+            }
+        }).join('');
+    }
+    // ------------------------------------
+
 document.getElementById('btn-enable-notif')?.addEventListener('click', async () => {
     const btn = document.getElementById('btn-enable-notif');
     setButtonLoading(btn, true, "Attivazione...");
