@@ -491,5 +491,79 @@ input::placeholder { color: #C7C7CC; font-weight: 400; }
     100% { opacity: 0; transform: translate(-50%, -15px) scale(0.9); }
 }
 
-
+/* BARRE CLASSIFICA AI */
+.ranking-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+}
+.ranking-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+.ranking-bar-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.ranking-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    justify-content: space-between;
+}
+.ranking-score {
+    color: var(--primary);
+    font-weight: 800;
+}
+.ranking-track {
+    width: 100%;
+    height: 6px;
+    background: var(--border-soft);
+    border-radius: 10px;
+    overflow: hidden;
+}
+.ranking-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #FF9500, var(--accent));
+    border-radius: 10px;
+    width: 0%;
+    transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.is-processing .ranking-bar-container {
+    filter: blur(4px);
+    opacity: 0.6;
+    animation: pulseBlur 2s infinite alternate;
+}
+.processing-badge {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    z-index: 10;
+    box-shadow: 0 4px 10px rgba(255, 107, 107, 0.2);
+}
+@keyframes pulseBlur {
+    0% { filter: blur(4px); opacity: 0.6; }
+    100% { filter: blur(2px); opacity: 0.8; }
+}
 
