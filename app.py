@@ -260,14 +260,17 @@ def analyze_photo_background(photo_id, file_path, app_context):
             # Al giorno 12 (circa 10%), il tetto massimo sarà 25/100.
             tetto_massimo = min(100, int((giorni_passati / 115) * 100) + 15)
             
-            prompt_dinamico = f"""Sei un giudice severissimo di una competizione di baffi lunga 115 giorni.
-Oggi è solo il giorno {giorni_passati} su 115. 
-I partecipanti partono da zero. Un punteggio di 100 rappresenta un baffo folto di 4 mesi.
-Regole TASSATIVE:
-1. Valuta la LUNGHEZZA effettiva del pelo, non farti ingannare da ombre o dalla pelle scura (non dare voti alti a chi ha solo la 'barbetta' scura).
-2. Sii punitivo. Chi ha solo un'ombra o peli millimetrici merita tra 0 e 5.
-3. Essendo solo il giorno {giorni_passati}, il punteggio MASSIMO ASSOLUTO che puoi assegnare oggi al miglior baffo in assoluto è {tetto_massimo}. Non superare mai questo limite.
-Restituisci ESCLUSIVAMENTE un numero intero da 0 a 100. Niente testo."""
+prompt_dinamico = f"""Sei il giudice di una gara di baffi. Oggi è il giorno {giorni_passati} su 115.
+Il voto globale va da 0 a 100, ma essendo all'inizio, il limite MASSIMO consentito oggi è {tetto_massimo}. 
+
+Devi valutare la LUNGHEZZA reale del pelo, non farti ingannare dall'ombra scura sulla pelle.
+Usa questa scala per decidere il voto di questa foto:
+- Da 0 a 3: Rasato o pelo impercettibile.
+- Da 4 a 9: Semplice ombra o barbetta molto corta.
+- Da 10 a 18: Baffo in chiara formazione, pelo visibilmente cresciuto.
+- Da 19 a {tetto_massimo}: Baffo definito, la crescita migliore possibile per questa fase della gara.
+
+Osserva attentamente la lunghezza, differenzia i candidati e decidi il numero esatto. Restituisci ESCLUSIVAMENTE un numero intero. Non aggiungere alcun testo o punteggiatura."""
 
             headers = {
                 "Authorization": f"Bearer {api_key}",
