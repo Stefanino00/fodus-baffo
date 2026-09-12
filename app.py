@@ -251,16 +251,12 @@ def analyze_photo_background(photo_id, file_path, app_context):
             
             api_key = os.environ.get("OPENROUTER_API_KEY")
             
-            # Calcolo dinamico del tempo
             oggi = datetime.utcnow().date()
             inizio = date(2026, 9, 1)
             giorni_passati = max(1, (oggi - inizio).days + 1)
-            
-            # Calcola un "tetto massimo" di voto basato sul giorno. 
-            # Al giorno 12 (circa 10%), il tetto massimo sarà 25/100.
             tetto_massimo = min(100, int((giorni_passati / 115) * 100) + 15)
             
-prompt_dinamico = f"""Sei il giudice di una gara di baffi. Oggi è il giorno {giorni_passati} su 115.
+            prompt_dinamico = f"""Sei il giudice di una gara di baffi. Oggi è il giorno {giorni_passati} su 115.
 Il voto globale va da 0 a 100, ma essendo all'inizio, il limite MASSIMO consentito oggi è {tetto_massimo}. 
 
 Devi valutare la LUNGHEZZA reale del pelo, non farti ingannare dall'ombra scura sulla pelle.
@@ -280,16 +276,8 @@ Osserva attentamente la lunghezza, differenzia i candidati e decidi il numero es
             payload = {
                 "model": "openai/gpt-4o-mini",
                 "messages": [
-                    {
-                        "role": "system",
-                        "content": prompt_dinamico
-                    },
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "image_url", "image_url": {"url": f"data:image/webp;base64,{base64_image}"}}
-                        ]
-                    }
+                    {"role": "system", "content": prompt_dinamico},
+                    {"role": "user", "content": [{"type": "image_url", "image_url": {"url": f"data:image/webp;base64,{base64_image}"}}]}
                 ],
                 "temperature": 0.0,
                 "max_tokens": 5
@@ -307,7 +295,6 @@ Osserva attentamente la lunghezza, differenzia i candidati e decidi il numero es
             
             score_text = result['choices'][0]['message']['content'].strip()
             digits = ''.join(filter(str.isdigit, score_text))
-            
             score_number = int(digits) if digits else 0
             
             photo = Photo.query.get(photo_id)
