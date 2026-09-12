@@ -159,6 +159,33 @@ def get_status():
     days_passed = (today - start_date).days + 1
     days_remaining = (end_date - today).days
 
+    # --- NUOVO: CALCOLO CLASSIFICA CRESCITA ---
+    all_users = User.query.all()
+    growth_ranking = []
+    
+    for u in all_users:
+        # Prende l'ultimissima foto dell'utente
+        last_p = Photo.query.filter_by(user_id=u.id).order_by(Photo.timestamp.desc()).first()
+        
+        # Se c'è la foto ma il voto è vuoto (None), il barbiere sta lavorando
+        is_processing = True if (last_p and last_p.ai_score is None) else False
+        score = last_p.ai_score if (last_p and last_p.ai_score is not None) else 0
+        
+        parts = u.nome.split()
+        iniziali = "".join([p[0] for p in parts[:2]]).upper()
+        
+        growth_ranking.append({
+            'id': u.id,
+            'nome': u.soprannome or u.nome,
+            'iniziali': iniziali,
+            'score': score,
+            'is_processing': is_processing
+        })
+        
+    # Ordina la classifica dal voto più alto al più basso
+    growth_ranking.sort(key=lambda x: x['score'], reverse=True)
+    # ------------------------------------------
+
     return jsonify({
         'user': {
             'id': user.id,
@@ -175,7 +202,8 @@ def get_status():
             'days_passed': max(0, days_passed),
             'total_days': total_days,
             'days_remaining': max(0, days_remaining),
-            'missing_users': missing_users
+            'missing_users': missing_users,
+            'growth_ranking': growth_ranking
         }
     })
 
