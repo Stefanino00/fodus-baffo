@@ -268,7 +268,7 @@ Restituisci ESCLUSIVAMENTE un numero intero da 0 a 10. Niente testo."""
 
             # Nuova sintassi per generare il contenuto
             response = client.models.generate_content(
-                model='gemini-1.5-flash',
+                model='gemini-3.5-flash',
                 contents=[prompt_visivo, img]
             )
             
