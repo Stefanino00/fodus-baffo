@@ -12,6 +12,8 @@ from models import db, User, Photo, Comment, Settings
 import threading
 import requests
 import base64
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = 'fodus_baffo_super_secret_key_2026'
