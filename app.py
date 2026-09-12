@@ -286,7 +286,13 @@ def analyze_photo_background(photo_id, file_path, app_context):
                 return
             # 3. Estrae il numero e lo salva nel DB
             score_text = result['choices'][0]['message']['content'].strip()
-            score_number = int(''.join(filter(str.isdigit, score_text))) # Estrae solo le cifre per sicurezza
+            digits = ''.join(filter(str.isdigit, score_text))
+            
+            # Paracadute: se l'AI non ha restituito nemmeno un numero, assegna 0
+            if not digits:
+                score_number = 0
+            else:
+                score_number = int(digits)
             
             # Salva nel database
             photo = Photo.query.get(photo_id)
