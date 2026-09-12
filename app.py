@@ -12,6 +12,9 @@ from models import db, User, Photo, Comment, Settings
 import threading
 import requests
 import base64
+import google.generativeai as genai
+import PIL.Image
+import os
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -246,12 +249,13 @@ def add_comment():
 def analyze_photo_background(photo_id, file_path, app_context):
     with app_context:
         try:
-            with open(file_path, "rb") as image_file:
-                base64_image = base64.b64encode(image_file.read()).decode('utf-8')
+            # 1. Configura la chiave API
+            genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
             
-            api_key = os.environ.get("OPENROUTER_API_KEY")
+            # 2. Carica l'immagine in memoria
+            img = PIL.Image.open(file_path)
             
-            # 1. L'AI fa solo l'AI: valuta visivamente da 0 a 10
+            # 3. L'AI fa il suo lavoro visivo da 0 a 10
             prompt_visivo = """Sei un barbiere esperto. Valuta la densità e la lunghezza di questo baffo.
 Scala assoluta da 0 a 10:
 0 = Completamente rasato.
@@ -262,49 +266,24 @@ Scala assoluta da 0 a 10:
 Non farti ingannare dal contrasto della pelle o della barba rasata: valuta la LUNGHEZZA dei peli sul labbro superiore.
 Restituisci ESCLUSIVAMENTE un numero intero da 0 a 10. Niente testo."""
 
-            headers = {
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json"
-            }
+            model = genai.GenerativeModel("gemini-1.5-flash")
+            response = model.generate_content([prompt_visivo, img])
             
-            payload = {
-                "model": "openai/gpt-4o-mini",
-                "messages": [
-                    {"role": "system", "content": prompt_visivo},
-                    {"role": "user", "content": [{"type": "image_url", "image_url": {"url": f"data:image/webp;base64,{base64_image}"}}]}
-                ],
-                "temperature": 0.0,
-                "max_tokens": 5
-            }
-            
-            response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
-            result = response.json()
-            
-            if 'error' in result:
-                print(f"🛑 Errore OpenRouter: {result['error']}")
-                return
-            if 'choices' not in result:
-                print(f"🛑 Risposta anomala: {result}")
-                return
-            
-            # 2. Estrai il voto base (0-10)
-            score_text = result['choices'][0]['message']['content'].strip()
+            # 4. Estrai il voto base (0-10)
+            score_text = response.text.strip()
             digits = ''.join(filter(str.isdigit, score_text))
             base_score = int(digits) if digits else 0
-            base_score = min(max(base_score, 0), 10) # Assicura sia massimo 10
+            base_score = min(max(base_score, 0), 10)
             
-            # 3. Python fa la matematica (Game Logic)
+            # 5. Python fa la matematica
             oggi = datetime.utcnow().date()
             inizio = date(2026, 9, 1)
             giorni_passati = max(1, (oggi - inizio).days + 1)
             
-            # Tetto massimo oggi (es. al giorno 12 è 25)
             tetto_massimo = min(100, int((giorni_passati / 115) * 100) + 15)
-            
-            # Proporzione: trasforma il voto 0-10 nel range 0-tetto_massimo
             score_finale = int((base_score / 10.0) * tetto_massimo)
             
-            # 4. Salva nel database
+            # 6. Salva nel database
             photo = Photo.query.get(photo_id)
             if photo:
                 photo.ai_score = min(max(score_finale, 0), 100)
