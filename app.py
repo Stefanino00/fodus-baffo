@@ -9,6 +9,9 @@ from flask import Flask, render_template, request, jsonify, session, send_from_d
 from pywebpush import webpush, WebPushException
 from apscheduler.schedulers.background import BackgroundScheduler
 from models import db, User, Photo, Comment, Settings
+import threading
+import requests
+import base64
 
 app = Flask(__name__)
 app.secret_key = 'fodus_baffo_super_secret_key_2026'
@@ -206,6 +209,55 @@ def add_comment():
     # Restituiamo il nome per aggiornare il popup in tempo reale
     author_name = User.query.get(user_id).soprannome or User.query.get(user_id).nome
     return jsonify({'success': True, 'word': word, 'author_name': author_name})
+
+def analyze_photo_background(photo_id, file_path, app_context):
+    with app_context:
+        try:
+            # 1. Legge la foto e la converte in base64 per l'API
+            with open(file_path, "rb") as image_file:
+                base64_image = base64.b64encode(image_file.read()).decode('utf-8')
+            
+            api_key = os.environ.get("OPENROUTER_API_KEY")
+            
+            # 2. Prepara il payload per GPT-4o-mini su OpenRouter
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "model": "openai/gpt-4o-mini",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "Sei un severo barbiere albanese, esperto in rasature. Analizza il volto in questa immagine e valuta esclusivamente e oggettivamente la lunghezza e lo spessore del baffo. Ignora capelli, espressioni, luci o sfondo. Valuta su una scala da 0 (rasato/invisibile) a 100 (baffo enorme/foltissimo). Devi restituire ESCLUSIVAMENTE un numero intero. Non aggiungere testo, non aggiungere punteggiatura."
+                    },
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "image_url", "image_url": {"url": f"data:image/webp;base64,{base64_image}"}}
+                        ]
+                    }
+                ],
+                "temperature": 0.0, # Zero creatività, massima precisione oggettiva
+                "max_tokens": 5     # Ci serve solo un numero
+            }
+            
+            response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+            result = response.json()
+            
+            # 3. Estrae il numero e lo salva nel DB
+            score_text = result['choices'][0]['message']['content'].strip()
+            score_number = int(''.join(filter(str.isdigit, score_text))) # Estrae solo le cifre per sicurezza
+            
+            # Salva nel database
+            photo = Photo.query.get(photo_id)
+            if photo:
+                photo.ai_score = min(max(score_number, 0), 100) # Assicura che sia tra 0 e 100
+                db.session.commit()
+                
+        except Exception as e:
+            print(f"Errore analisi AI per foto {photo_id}: {e}")
 
 @app.route('/api/calendar', methods=['GET'])
 def get_calendar():
