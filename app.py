@@ -120,6 +120,9 @@ def upload_photo():
     photo = Photo(user_id=user_id, filename=filename, date_created=today)
     db.session.add(photo)
     db.session.commit()
+    app_context = app.app_context()
+    thread = threading.Thread(target=analyze_photo_background, args=(photo.id, file_path, app_context))
+    thread.start()
     return jsonify({'success': True})
 
 @app.route('/api/status', methods=['GET'])
