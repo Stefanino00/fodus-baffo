@@ -246,13 +246,29 @@ def add_comment():
 def analyze_photo_background(photo_id, file_path, app_context):
     with app_context:
         try:
-            # 1. Legge la foto e la converte in base64 per l'API
             with open(file_path, "rb") as image_file:
                 base64_image = base64.b64encode(image_file.read()).decode('utf-8')
             
             api_key = os.environ.get("OPENROUTER_API_KEY")
             
-            # 2. Prepara il payload per GPT-4o-mini su OpenRouter
+            # Calcolo dinamico del tempo
+            oggi = datetime.utcnow().date()
+            inizio = date(2026, 9, 1)
+            giorni_passati = max(1, (oggi - inizio).days + 1)
+            
+            # Calcola un "tetto massimo" di voto basato sul giorno. 
+            # Al giorno 12 (circa 10%), il tetto massimo sarà 25/100.
+            tetto_massimo = min(100, int((giorni_passati / 115) * 100) + 15)
+            
+            prompt_dinamico = f"""Sei un giudice severissimo di una competizione di baffi lunga 115 giorni.
+Oggi è solo il giorno {giorni_passati} su 115. 
+I partecipanti partono da zero. Un punteggio di 100 rappresenta un baffo folto di 4 mesi.
+Regole TASSATIVE:
+1. Valuta la LUNGHEZZA effettiva del pelo, non farti ingannare da ombre o dalla pelle scura (non dare voti alti a chi ha solo la 'barbetta' scura).
+2. Sii punitivo. Chi ha solo un'ombra o peli millimetrici merita tra 0 e 5.
+3. Essendo solo il giorno {giorni_passati}, il punteggio MASSIMO ASSOLUTO che puoi assegnare oggi al miglior baffo in assoluto è {tetto_massimo}. Non superare mai questo limite.
+Restituisci ESCLUSIVAMENTE un numero intero da 0 a 100. Niente testo."""
+
             headers = {
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json"
@@ -263,7 +279,7 @@ def analyze_photo_background(photo_id, file_path, app_context):
                 "messages": [
                     {
                         "role": "system",
-                        "content": "Sei un severo barbiere albanese, esperto in rasature. Analizza il volto in questa immagine e valuta esclusivamente e oggettivamente la lunghezza e lo spessore del baffo. Ignora capelli, espressioni, luci o sfondo. Valuta su una scala da 0 (rasato/invisibile) a 100 (baffo enorme/foltissimo). Devi restituire ESCLUSIVAMENTE un numero intero. Non aggiungere testo, non aggiungere punteggiatura."
+                        "content": prompt_dinamico
                     },
                     {
                         "role": "user",
@@ -272,32 +288,28 @@ def analyze_photo_background(photo_id, file_path, app_context):
                         ]
                     }
                 ],
-                "temperature": 0.0, # Zero creatività, massima precisione oggettiva
-                "max_tokens": 5     # Ci serve solo un numero
+                "temperature": 0.0,
+                "max_tokens": 5
             }
             
             response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
             result = response.json()
+            
             if 'error' in result:
-                print(f"🛑 Rifiutato da OpenRouter (Foto {photo_id}): {result['error']}")
+                print(f"🛑 Errore OpenRouter: {result['error']}")
                 return
             if 'choices' not in result:
-                print(f"🛑 Risposta anomala da OpenRouter: {result}")
+                print(f"🛑 Risposta anomala: {result}")
                 return
-            # 3. Estrae il numero e lo salva nel DB
+            
             score_text = result['choices'][0]['message']['content'].strip()
             digits = ''.join(filter(str.isdigit, score_text))
             
-            # Paracadute: se l'AI non ha restituito nemmeno un numero, assegna 0
-            if not digits:
-                score_number = 0
-            else:
-                score_number = int(digits)
+            score_number = int(digits) if digits else 0
             
-            # Salva nel database
             photo = Photo.query.get(photo_id)
             if photo:
-                photo.ai_score = min(max(score_number, 0), 100) # Assicura che sia tra 0 e 100
+                photo.ai_score = min(max(score_number, 0), 100)
                 db.session.commit()
                 
         except Exception as e:
