@@ -93,6 +93,8 @@ document.getElementById('btn-login').addEventListener('click', async () => {
         body: JSON.stringify({pin})
     });
     if (res.ok) { 
+        // Salva il PIN nella memoria permanente del telefono
+        localStorage.setItem('fodus_baffo_pin', pin); 
         currentUser = await res.json(); 
         checkStatus(); 
     } else { 
@@ -101,8 +103,32 @@ document.getElementById('btn-login').addEventListener('click', async () => {
 });
 
 async function checkStatus() {
-    const res = await fetch('/api/status');
-    if (!res.ok) return showView('view-login');
+    let res = await fetch('/api/status');
+    
+    // Se la sessione è scaduta (es. app chiusa e riaperta)
+    if (!res.ok) {
+        const savedPin = localStorage.getItem('fodus_baffo_pin');
+        if (savedPin) {
+            // Tenta il login invisibile usando il PIN salvato
+            const loginRes = await fetch('/api/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({pin: savedPin})
+            });
+            
+            if (loginRes.ok) {
+                // Login automatico riuscito! Ricarica i dati della dashboard
+                res = await fetch('/api/status'); 
+            } else {
+                // PIN salvato errato o cambiato, puliamo la memoria
+                localStorage.removeItem('fodus_baffo_pin');
+                return showView('view-login');
+            }
+        } else {
+            // Nessun PIN salvato, mostra la schermata classica
+            return showView('view-login');
+        }
+    }
     
     const status = await res.json();
     currentUser = status.user;
