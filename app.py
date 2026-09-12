@@ -276,7 +276,12 @@ def analyze_photo_background(photo_id, file_path, app_context):
             
             response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
             result = response.json()
-            
+            if 'error' in result:
+                print(f"🛑 Rifiutato da OpenRouter (Foto {photo_id}): {result['error']}")
+                return
+            if 'choices' not in result:
+                print(f"🛑 Risposta anomala da OpenRouter: {result}")
+                return
             # 3. Estrae il numero e lo salva nel DB
             score_text = result['choices'][0]['message']['content'].strip()
             score_number = int(''.join(filter(str.isdigit, score_text))) # Estrae solo le cifre per sicurezza
