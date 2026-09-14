@@ -162,5 +162,29 @@
     </div>
 
     <script src="/static/js/app.js?v=14"></script>
+
+    <!-- SCRIPT AGGIUNTO: Sincronizzazione silente delle notifiche -->
+    <script>
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+            navigator.serviceWorker.ready.then(function(registration) {
+                registration.pushManager.getSubscription().then(function(subscription) {
+                    if (subscription) {
+                        // Il telefono ha le notifiche attive, le ricarica nel database senza disturbare l'utente
+                        fetch('/subscribe', { // Assicurati che '/subscribe' sia l'URL corretto della tua rotta Flask!
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(subscription)
+                        }).then(response => {
+                            if(response.ok) {
+                                console.log("Notifiche sincronizzate col server in background.");
+                            }
+                        }).catch(error => console.error("Errore sync notifiche:", error));
+                    }
+                });
+            });
+        }
+    </script>
 </body>
 </html>
