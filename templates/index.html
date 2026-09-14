@@ -170,7 +170,7 @@
                 registration.pushManager.getSubscription().then(function(subscription) {
                     if (subscription) {
                         // Il telefono ha le notifiche attive, le ricarica nel database senza disturbare l'utente
-                        fetch('/subscribe', { // Assicurati che '/subscribe' sia l'URL corretto della tua rotta Flask!
+                        fetch('/api/subscribe', { // Assicurati che '/subscribe' sia l'URL corretto della tua rotta Flask!
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
