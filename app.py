@@ -249,36 +249,54 @@ def add_comment():
 def analyze_photo_background(photo_id, file_path, app_context):
     with app_context:
         try:
-            # 1. Inizializza il nuovo Client di Google
-            client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+            import requests, base64, os
+            from datetime import datetime, date
+            from models import db, Photo
             
-            # 2. Carica l'immagine in memoria
-            img = PIL.Image.open(file_path)
+            with open(file_path, "rb") as image_file:
+                base64_image = base64.b64encode(image_file.read()).decode('utf-8')
             
-            # 3. L'AI fa il suo lavoro visivo da 0 a 10
+            api_key = os.environ.get("OPENROUTER_API_KEY")
+            
             prompt_visivo = """Sei un barbiere esperto. Valuta la densità e la lunghezza di questo baffo.
 Scala assoluta da 0 a 10:
 0 = Completamente rasato.
 1-2 = Leggera ombra o peluria.
 3-4 = Baffo corto, in fase iniziale di crescita.
 5-7 = Baffo ben definito e visibile.
-8-10 = Baffo folto, lungo e maturo (stile anni 80).
-Non farti ingannare dal contrasto della pelle o della barba rasata: valuta la LUNGHEZZA dei peli sul labbro superiore.
+8-10 = Baffo folto, lungo e maturo.
+Non farti ingannare dal contrasto della pelle: valuta la LUNGHEZZA dei peli sul labbro superiore.
 Restituisci ESCLUSIVAMENTE un numero intero da 0 a 10. Niente testo."""
 
-            # Nuova sintassi per generare il contenuto
-            response = client.models.generate_content(
-                model='gemini-3.5-flash',
-                contents=[prompt_visivo, img]
-            )
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            }
             
-            # 4. Estrai il voto base (0-10)
-            score_text = response.text.strip()
+            payload = {
+                "model": "openai/gpt-4o-mini",
+                "messages": [
+                    {"role": "system", "content": prompt_visivo},
+                    {"role": "user", "content": [{"type": "image_url", "image_url": {"url": f"data:image/webp;base64,{base64_image}"}}]}
+                ],
+                "temperature": 0.0,
+                "max_tokens": 5
+            }
+            
+            response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+            result = response.json()
+            
+            if 'error' in result:
+                print(f"🛑 Errore OpenRouter: {result['error']}")
+                return
+            if 'choices' not in result:
+                print(f"🛑 Risposta anomala: {result}")
+                return
+            
+            score_text = result['choices'][0]['message']['content'].strip()
             digits = ''.join(filter(str.isdigit, score_text))
-            base_score = int(digits) if digits else 0
-            base_score = min(max(base_score, 0), 10)
+            base_score = min(max(int(digits) if digits else 0, 0), 10)
             
-            # 5. Python fa la matematica
             oggi = datetime.utcnow().date()
             inizio = date(2026, 9, 1)
             giorni_passati = max(1, (oggi - inizio).days + 1)
@@ -286,7 +304,6 @@ Restituisci ESCLUSIVAMENTE un numero intero da 0 a 10. Niente testo."""
             tetto_massimo = min(100, int((giorni_passati / 115) * 100) + 15)
             score_finale = int((base_score / 10.0) * tetto_massimo)
             
-            # 6. Salva nel database
             photo = Photo.query.get(photo_id)
             if photo:
                 photo.ai_score = min(max(score_finale, 0), 100)
