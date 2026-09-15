@@ -21,8 +21,8 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = 'fodus_baffo_super_secret_key_2026'
 
-VAPID_PUBLIC_KEY = "BCdWDfFOUdE48sgpzDCkzR99SHBDr6fbzdRyKFdYp3ZGJAXRrsB0xz4huC5Hceh9yqANvz3-CgdPgnsPAPgnsPAJr5fn0"
-VAPID_PRIVATE_KEY = "mWmuS_jdca1L_gwvPQX-sT_skpWpwLSYfNleLngOMYw"
+VAPID_PUBLIC_KEY = "BFR1mDVfW2DBRV4hZenFgMHm-GgVv3A09Z9f9SmSExZZuL6smbWy-mlk-vmZ3IiibKdnrmEka95XIcTUDchqvng"
+VAPID_PRIVATE_KEY = os.path.join(BASE_DIR, "private_key.pem")
 VAPID_CLAIMS = {"sub": "mailto:ferrasteferra@gmail.com"}
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
