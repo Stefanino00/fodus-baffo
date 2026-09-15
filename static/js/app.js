@@ -55,10 +55,11 @@ function fireConfetti() {
 }
 
 function urlBase64ToUint8Array(base64String) {
-    // Pulisce da qualsiasi spazio, a capo o carattere invisibile
-    const cleaned = base64String.replace(/\s/g, '');
-    const padding = '='.repeat((4 - (cleaned.length % 4)) % 4);
-    const base64 = (cleaned + padding)
+    // Rimuove brutalmente qualsiasi carattere che non appartenga all'alfabeto Base64 o Base64URL
+    const sanitized = base64String.replace(/[^A-Za-z0-9\+\/\-\_]/g, '');
+    
+    const padding = '='.repeat((4 - (sanitized.length % 4)) % 4);
+    const base64 = (sanitized + padding)
         .replace(/\-/g, '+')
         .replace(/_/g, '/');
 
