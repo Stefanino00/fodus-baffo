@@ -55,10 +55,13 @@ function fireConfetti() {
 }
 
 function urlBase64ToUint8Array(base64String) {
-    // Pulisce la stringa da eventuali spazi o ritorni a capo accidentali
-    const cleaned = base64String.trim();
-    const padding = '='.repeat((4 - cleaned.length % 4) % 4);
-    const base64 = (cleaned + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    // Pulisce da qualsiasi spazio, a capo o carattere invisibile
+    const cleaned = base64String.replace(/\s/g, '');
+    const padding = '='.repeat((4 - (cleaned.length % 4)) % 4);
+    const base64 = (cleaned + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+
     const rawData = window.atob(base64);
     const outputArray = new Uint8Array(rawData.length);
     for (let i = 0; i < rawData.length; ++i) {
