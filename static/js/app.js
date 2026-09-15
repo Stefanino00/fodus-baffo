@@ -367,37 +367,45 @@ document.getElementById('btn-retake').addEventListener('click', () => {
 
 document.getElementById('btn-upload').addEventListener('click', async () => {
     const btn = document.getElementById('btn-upload');
+    const loader = document.getElementById('loading-overlay'); // Peschiamo il loader
+    
     setButtonLoading(btn, true, "Invio...");
+    loader.classList.remove('hidden'); // ACCENDIAMO IL LOADER A SCHERMO INTERO
+    
     try {
         const res = await fetch('/api/upload-photo', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({image: capturedBase64}) });
+        
         if (res.ok) {
             if (stream) stream.getTracks().forEach(track => track.stop());
-            const overlay = document.getElementById('success-overlay');
             
-            // IL FIX: Togliamo il blocco 'hidden' prima di attivare l'animazione
+            loader.classList.add('hidden'); // SPEGNIAMO IL LOADER: il server ha risposto!
+            
+            const overlay = document.getElementById('success-overlay');
             overlay.classList.remove('hidden');
             
-            // Aspettiamo 10 millisecondi per dare il tempo al CSS di prepararsi
             setTimeout(() => {
                 overlay.classList.add('active');
                 
-                // --- NUOVE ANIMAZIONI! ---
                 if (navigator.vibrate) navigator.vibrate([200, 100, 200]); 
                 fireConfetti(); 
-                // -------------------------
-
+                
                 setTimeout(() => {
-                    overlay.classList.remove('active'); // Inizia a sfumare
-                    
-                    // Aspetta 300ms che finisca la sfumatura prima di rimettere 'hidden' e tornare alla home
+                    overlay.classList.remove('active'); 
                     setTimeout(() => {
                         overlay.classList.add('hidden');
                         checkStatus();
                     }, 300);
-                    
                 }, 1800);
             }, 10);
+        } else {
+            // Se c'è un errore dal server (es. hai già caricato la foto), togliamo il loader
+            loader.classList.add('hidden');
+            alert("Errore durante l'invio della foto.");
         }
+    } catch (err) {
+        // Se salta la connessione, togliamo il loader
+        loader.classList.add('hidden');
+        alert("Errore di rete, riprova!");
     } finally {
         setButtonLoading(btn, false);
     }
