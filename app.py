@@ -20,12 +20,12 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = 'fodus_baffo_super_secret_key_2026'
-
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 VAPID_PUBLIC_KEY = "BFR1mDVfW2DBRV4hZenFgMHm-GgVv3A09Z9f9SmSExZZuL6smbWy-mlk-vmZ3IiibKdnrmEka95XIcTUDchqvng"
 VAPID_PRIVATE_KEY = os.path.join(BASE_DIR, "private_key.pem")
 VAPID_CLAIMS = {"sub": "mailto:ferrasteferra@gmail.com"}
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'baffo.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
