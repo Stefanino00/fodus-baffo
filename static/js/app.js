@@ -373,17 +373,30 @@ document.getElementById('btn-upload').addEventListener('click', async () => {
         if (res.ok) {
             if (stream) stream.getTracks().forEach(track => track.stop());
             const overlay = document.getElementById('success-overlay');
-            overlay.classList.add('active');
             
-            // --- NUOVE ANIMAZIONI! ---
-            if (navigator.vibrate) navigator.vibrate([200, 100, 200]); // Vibrazione stile iOS (se supportata)
-            fireConfetti(); // Spara i coriandoli
-            // -------------------------
-
+            // IL FIX: Togliamo il blocco 'hidden' prima di attivare l'animazione
+            overlay.classList.remove('hidden');
+            
+            // Aspettiamo 10 millisecondi per dare il tempo al CSS di prepararsi
             setTimeout(() => {
-                overlay.classList.remove('active');
-                checkStatus();
-            }, 1800); // Ho allungato un po' il tempo per far godere l'animazione (da 1300 a 1800)
+                overlay.classList.add('active');
+                
+                // --- NUOVE ANIMAZIONI! ---
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200]); 
+                fireConfetti(); 
+                // -------------------------
+
+                setTimeout(() => {
+                    overlay.classList.remove('active'); // Inizia a sfumare
+                    
+                    // Aspetta 300ms che finisca la sfumatura prima di rimettere 'hidden' e tornare alla home
+                    setTimeout(() => {
+                        overlay.classList.add('hidden');
+                        checkStatus();
+                    }, 300);
+                    
+                }, 1800);
+            }, 10);
         }
     } finally {
         setButtonLoading(btn, false);
@@ -556,12 +569,23 @@ document.getElementById('btn-send-comment').onclick = async () => {
             const overlayText = document.querySelector('.success-text');
             const oldText = overlayText.innerText;
             overlayText.innerText = "Commento Inviato! 💬";
-            overlay.classList.add('active');
+            
+            // IL FIX ANCHE QUI
+            overlay.classList.remove('hidden');
             
             setTimeout(() => {
-                overlay.classList.remove('active');
-                setTimeout(() => overlayText.innerText = oldText, 300);
-            }, 1300);
+                overlay.classList.add('active');
+                
+                setTimeout(() => {
+                    overlay.classList.remove('active');
+                    
+                    setTimeout(() => {
+                        overlay.classList.add('hidden');
+                        overlayText.innerText = oldText; // Rimette il testo "Inviata!" per le foto
+                    }, 300);
+                    
+                }, 1300);
+            }, 10);
 
             fetch('/api/calendar').then(r => r.json()).then(d => renderCalendar(d));
             
