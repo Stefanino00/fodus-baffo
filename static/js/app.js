@@ -194,9 +194,8 @@ async function checkStatus() {
     const actionCard = document.getElementById('home-action-card');
     const urlParams = new URLSearchParams(window.location.search);
     const isPreview = urlParams.get('preview') === '1' && currentUser.is_admin;
-
     const notifPrompt = document.getElementById('notification-prompt');
-    if ('Notification' in window && Notification.permission === 'default') {
+    if ('Notification' in window && Notification.permission !== 'granted') {
         notifPrompt.classList.remove('hidden');
     } else {
         notifPrompt.classList.add('hidden');
