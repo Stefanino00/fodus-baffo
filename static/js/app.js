@@ -277,26 +277,44 @@ document.getElementById('btn-enable-notif')?.addEventListener('click', async () 
     const btn = document.getElementById('btn-enable-notif');
     setButtonLoading(btn, true, "Attivazione...");
     try {
+        console.log("1. Richiedo il permesso notifiche...");
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
+            console.log("2. Permesso concesso, attendo il Service Worker...");
             const reg = await navigator.serviceWorker.ready;
+            
+            console.log("3. Verifico sottoscrizione esistente...");
             let sub = await reg.pushManager.getSubscription();
+            
             if (!sub) {
+                console.log("4. Nessuna sottoscrizione trovata, ne creo una nuova...");
+                const convertedKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
                 sub = await reg.pushManager.subscribe({
                     userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                    applicationServerKey: convertedKey
                 });
             }
-            await fetch('/api/subscribe', {
+            
+            console.log("5. Invio la sottoscrizione al server...");
+            const res = await fetch('/api/subscribe', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(sub)
             });
-            checkStatus();
+            
+            if (res.ok) {
+                console.log("6. Salvataggio OK!");
+                checkStatus();
+            } else {
+                alert("Errore salvataggio server backend.");
+            }
+        } else {
+            alert("Permesso notifiche negato dall'utente.");
         }
     } catch (err) {
-        console.error("Errore notifiche:", err);
-        alert("Errore iOS: " + err.message);
+        // STAMPA L'ERRORE REALE E PRECISO IN UN ALERT
+        console.error("Errore dettagliato notifiche:", err);
+        alert(`CRASH AL PASSO: ${err.name} - ${err.message}`);
     } finally {
         setButtonLoading(btn, false);
     }
