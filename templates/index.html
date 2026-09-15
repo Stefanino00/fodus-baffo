@@ -169,18 +169,21 @@
             navigator.serviceWorker.ready.then(function(registration) {
                 registration.pushManager.getSubscription().then(function(subscription) {
                     if (subscription) {
-                        // Il telefono ha le notifiche attive, le ricarica nel database senza disturbare l'utente
-                        fetch('/api/subscribe', { // Assicurati che '/subscribe' sia l'URL corretto della tua rotta Flask!
+                        // L'iPhone ha le chiavi: invio silenzioso al server
+                        fetch('/api/subscribe', { 
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
+                            headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(subscription)
                         }).then(response => {
-                            if(response.ok) {
-                                console.log("Notifiche sincronizzate col server in background.");
-                            }
-                        }).catch(error => console.error("Errore sync notifiche:", error));
+                            console.log("Notifiche sincronizzate col server.");
+                        }).catch(err => console.error(err));
+                    } else {
+                        // L'iPhone ha perso le chiavi: forziamo la comparsa del banner
+                        const promptBanner = document.getElementById('notification-prompt');
+                        if(promptBanner) {
+                            promptBanner.classList.remove('hidden');
+                            promptBanner.style.display = 'block'; // Sicurezza extra per mostrarlo
+                        }
                     }
                 });
             });
