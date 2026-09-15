@@ -10,7 +10,7 @@ fetch('/static/phrases.json')
     .then(data => funnyPhrases = data)
     .catch(err => console.error("Errore frasi:", err));
 
-const VAPID_PUBLIC_KEY = "BCdWDfFOUdE48sgpzDCkzR99SHBDr6fbzdRyKFdYp3ZGJAXRrsB0xz4huC5Hceh9yqANvz3-CgdPgnsPAPgnsPAJr5fn0";
+const VAPID_PUBLIC_KEY = "BFR1mDVfW2DBRV4hZenFgMHm-GgVv3A09Z9f9SmSExZZuL6smbWy-mlk-vmZ3IiibKdnrmEka95XIcTUDchqvng";
 
 // Motore Coriandoli (Confetti)
 function fireConfetti() {
