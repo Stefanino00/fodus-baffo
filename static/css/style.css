@@ -566,4 +566,36 @@ input::placeholder { color: #C7C7CC; font-weight: 400; }
     0% { filter: blur(4px); opacity: 0.6; }
     100% { filter: blur(2px); opacity: 0.8; }
 }
+/* =========================================
+   OVERLAY DI CARICAMENTO (LOADER)
+   ========================================= */
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(5px);
+    z-index: 10001; /* Sopra a tutto */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+.loading-overlay.hidden {
+    display: none !important;
+    opacity: 0;
+}
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 6px solid rgba(255,255,255,0.2);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
 
