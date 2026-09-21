@@ -20,6 +20,7 @@ let lastStatusAt = 0;
 let calendarData = null;      // ultimo /api/calendar
 let recapBlob = null;
 let recapObjectUrl = null;
+let isFirstRender = true;     // flag per animare solo al primo caricamento
 
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
@@ -369,7 +370,7 @@ async function checkStatus(opts = {}) {
     if (!stay || ['view-splash', 'view-login', 'view-onboarding'].includes(active)) showView('view-home');
 }
 
-function renderTicks(daysPassed, totalDays) {
+function renderTicks(daysPassed, totalDays, animate = false) {
     const box = $('day-ticks');
     if (!box || !totalDays) return;
     if (box.childElementCount !== totalDays) {
@@ -385,6 +386,42 @@ function renderTicks(daysPassed, totalDays) {
         const day = idx + 1;
         t.classList.toggle('on', day <= daysPassed);
         t.classList.toggle('now', day === daysPassed && day !== totalDays);
+        
+        // Aggiungi animazione al primo caricamento
+        if (animate && (day <= daysPassed || day === totalDays)) {
+            t.style.setProperty('--tick-index', idx);
+            t.classList.add('animate-tick');
+        }
+    });
+}
+
+/**
+ * Anima il contatore dei giorni da 0 al valore finale
+ * Eseguita solo al primo caricamento dell'app
+ */
+function animateDayCounter(finalValue, duration = 600) {
+    return new Promise(resolve => {
+        const el = $('stat-days-passed');
+        if (!el) return resolve();
+        
+        const startTime = Date.now();
+        const startValue = 0;
+        
+        const animate = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const current = Math.floor(startValue + (finalValue - startValue) * progress);
+            el.textContent = current;
+            
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                el.textContent = finalValue;
+                resolve();
+            }
+        };
+        
+        requestAnimationFrame(animate);
     });
 }
 
@@ -401,9 +438,16 @@ function renderHome(status, opts = {}) {
     }
 
     // Giorno di sfida + tacche
-    $('stat-days-passed').textContent = s.days_passed;
+    // Se è il primo caricamento, anima il contatore e le tacche
+    if (isFirstRender) {
+        animateDayCounter(s.days_passed, 600);
+        renderTicks(s.days_passed, s.total_days, true);
+        isFirstRender = false;
+    } else {
+        $('stat-days-passed').textContent = s.days_passed;
+        renderTicks(s.days_passed, s.total_days, false);
+    }
     $('stat-total-days').textContent = s.total_days;
-    renderTicks(s.days_passed, s.total_days);
 
     // Countdown a Natale (appare subito: viene dalla cache al primo frame)
     const pill = $('countdown-pill');

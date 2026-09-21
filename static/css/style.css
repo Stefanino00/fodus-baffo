@@ -87,7 +87,7 @@ button { cursor: pointer; }
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    padding: 24px 20px 28px;
+    padding: 24px 20px calc(120px + var(--safe-bottom));
     background: var(--white);
     border-radius: 32px 32px 0 0;
     box-shadow: 0 -4px 15px rgba(0,0,0,0.08);
@@ -111,13 +111,21 @@ button { cursor: pointer; }
 
 .tabbar {
     display: none;
+    position: fixed;
+    bottom: calc(var(--safe-bottom) + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 24px);
+    max-width: 456px;
+    z-index: 9999;
     flex: none;
-    /* Riduciamo l'offset di var(--safe-bottom) per spingere le icone in basso */
-    padding: 4px 12px max(6px, calc(var(--safe-bottom) * 0.5));
-    background: var(--white);
-    border-top: 1px solid var(--line);
-    margin: 0 12px max(4px, calc(var(--safe-bottom) * 0.2)) 12px;
-    border-radius: 32px;
+    padding: 8px 16px max(8px, calc(var(--safe-bottom) * 0.3));
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 28px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 body[data-view="view-home"] .tabbar,
 body[data-view="view-calendar"] .tabbar { display: flex; }
@@ -243,41 +251,46 @@ body[data-view="view-calendar"] .tabbar { display: flex; }
 @keyframes shimmer { to { background-position: -200% 0; } }
 
 /* 115 tacche: una per giorno. Alte ogni 10 giorni. */
-.ticks { 
-    display: flex; 
-    align-items: flex-end; 
-    gap: 1px; 
-    height: 34px; 
-    margin-top: 20px;
-    padding: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 16px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-}
-.ticks i { 
-    flex: 1; 
-    height: 12px; 
-    border-radius: 2px; 
-    background: rgba(232, 226, 220, 0.5);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease-out;
-}
+.ticks { display: flex; align-items: flex-end; gap: 1px; height: 34px; margin-top: 20px; }
+.ticks i { flex: 1; height: 12px; border-radius: 1px; background: var(--line); }
 .ticks i.m { height: 20px; }
-.ticks i.on { 
-    background: rgba(75, 46, 30, 0.7);
-    box-shadow: 0 4px 12px rgba(75, 46, 30, 0.2);
+.ticks i.on { background: var(--brown); }
+.ticks i.end { height: 34px; background: var(--berry); }
+.ticks i.now { height: 34px; background: var(--pine); }
+
+/* Animazioni per il riempimento della barra dei giorni */
+@keyframes fillTickBrown {
+    from { background: var(--line); }
+    to { background: var(--brown); }
 }
-.ticks i.end { 
-    height: 34px; 
-    background: rgba(196, 61, 61, 0.8);
-    box-shadow: 0 6px 16px rgba(196, 61, 61, 0.25);
+
+@keyframes fillTickPine {
+    from { background: var(--line); }
+    to { background: var(--pine); }
 }
-.ticks i.now { 
-    height: 34px; 
-    background: rgba(30, 107, 78, 0.8);
-    box-shadow: 0 6px 16px rgba(30, 107, 78, 0.25);
+
+@keyframes fillTickBerry {
+    from { background: var(--line); }
+    to { background: var(--berry); }
+}
+
+.ticks i.animate-tick {
+    animation-duration: 0.8s;
+    animation-fill-mode: forwards;
+    animation-timing-function: ease-out;
+    animation-delay: calc(var(--tick-index, 0) * 3ms);
+}
+
+.ticks i.animate-tick.on {
+    animation-name: fillTickBrown;
+}
+
+.ticks i.animate-tick.now {
+    animation-name: fillTickPine;
+}
+
+.ticks i.animate-tick.end {
+    animation-name: fillTickBerry;
 }
 
 /* ---------- Home: oggi ---------- */
