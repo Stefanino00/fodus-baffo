@@ -2,133 +2,161 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Fodus Baffo</title>
-    
+    <meta name="theme-color" content="#4B2E1E">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+
     <link rel="manifest" href="/static/manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css?v=16">
 </head>
-<body>
+<body data-view="view-splash">
     <div id="screen-flash"></div>
-    <div class="app-container">
-        
-        <!-- HEADER ANIMATO -->
+
+    <div class="app">
+
+        <!-- HEADER: fascia marrone (regge anche la barra di stato trasparente di iOS) -->
         <header class="app-header">
-            <h1 class="animated-logo">
-                <span class="title-baffo">BAFFO</span>
-                <span class="title-fodus">FODUS</span>
-            </h1>
+            <img class="brand-icon" src="/static/icons/icon-192.png" alt="">
+            <span class="brand-name">Fodus Baffo</span>
+            <span id="header-user" class="header-user hidden"></span>
         </header>
-        
-        <div style="text-align: center; margin-top: 4px; margin-bottom: 16px;">
-            <div id="countdown-pill" class="countdown-badge">Caricamento...</div>
-        </div>
 
-        <!-- LOGIN CENTRATO -->
-        <section id="view-login" class="view active" style="justify-content: center; align-items: center; padding-bottom: 20vh;">
-            <div class="card" style="width: 100%;">
-                <h2>Accesso Sfida</h2>
-                <!-- inputmode="numeric" forza il tastierino grande su iPhone -->
-                <input type="password" id="pin-input" maxlength="4" placeholder="Inserisci PIN" pattern="\d*" inputmode="numeric">
-                <button id="btn-login" class="btn-primary">Entra</button>
+        <main class="app-main" id="app-main">
+
+            <!-- SPLASH: si vede al posto del login mentre l'app decide dove andare -->
+            <section id="view-splash" class="view view-center active">
+                <img class="splash-icon" src="/static/icons/icon-192.png" alt="">
+                <p id="splash-msg" class="splash-msg"></p>
+                <button id="btn-retry" class="btn btn-ghost hidden">Riprova</button>
+            </section>
+
+            <!-- LOGIN -->
+            <section id="view-login" class="view view-center">
+                <img class="splash-icon" src="/static/icons/icon-192.png" alt="">
+                <h2 class="page-title">Accesso sfida</h2>
+                <p class="page-sub">Inserisci il tuo PIN a 4 cifre</p>
+                <input type="password" id="pin-input" class="pin-input" maxlength="4" placeholder="••••" pattern="\d*" inputmode="numeric" autocomplete="off" enterkeyhint="go">
+                <button id="btn-login" class="btn btn-primary">Entra</button>
                 <p id="login-error" class="error-msg"></p>
-            </div>
-        </section>
+            </section>
 
-        <section id="view-onboarding" class="view">
-            <div class="card">
-                <h2>Il tuo Nickname</h2>
-                <input type="text" id="nickname-input" placeholder="Come ti chiamiamo?" maxlength="20">
-                <button id="btn-save-nickname" class="btn-primary">Conferma</button>
-            </div>
-        </section>
+            <!-- NICKNAME -->
+            <section id="view-onboarding" class="view view-center">
+                <h2 class="page-title">Come ti chiamiamo?</h2>
+                <p class="page-sub">Il nickname che vedranno gli altri</p>
+                <input type="text" id="nickname-input" class="text-input" placeholder="Il tuo nickname" maxlength="20" autocomplete="off">
+                <button id="btn-save-nickname" class="btn btn-primary">Conferma</button>
+            </section>
 
-        <section id="view-home" class="view">
-            <!-- DASHBOARD GRID IN COLONNA -->
-            <div class="dashboard-grid">
-                <!-- AVANZAMENTO PRIMA -->
-                <div class="stat-card">
-                    <span class="stat-title">Avanzamento</span>
-                    <h3 id="stat-days-passed" class="stat-value">Giorno 0</h3>
-                    <div class="progress-bar-track">
-                        <div id="progress-bar-fill" class="progress-bar-fill"></div>
-                    </div>
-                    <span class="stat-desc">su 115 giorni</span>
-                </div>
-                
-                <!-- STATO DI OGGI + AVATAR DOPO -->
-                <div class="stat-card">
-                    <span class="stat-title">Stato di Oggi</span>
-                    <h3 id="stat-photos-today" class="stat-value">0/4</h3>
-                    <span class="stat-desc">Hanno fatto la foto</span>
-                    
-                    <!-- NUOVO: SEZIONE CHI MANCA -->
-                    <div id="missing-users-container" class="missing-users-container">
-                        <!-- Popolato via JS con le iniziali -->
-                    </div>
-                </div>
-            </div>
+            <!-- HOME -->
+            <section id="view-home" class="view">
 
-            <div id="notification-prompt" class="action-card hidden" style="background-color: var(--primary-light); border: 2px solid var(--primary); padding: 20px;">
-                <h3 style="font-size: 1.2rem; color: var(--primary);">🔔 Attiva le Notifiche</h3>
-                <p class="stat-desc" style="margin: 8px 0 16px 0;">Indispensabili per non farti scappare la foto quotidiana!</p>
-                <button id="btn-enable-notif" class="btn-primary" style="padding: 12px; font-size: 1rem;">Consenti Notifiche</button>
-            </div>
-
-            <div class="action-card" id="home-action-card">
-                <!-- Verrà popolato da JS -->
-            </div>
-            <!-- NUOVA: CLASSIFICA CRESCITA AI -->
-                <div class="stat-card" style="grid-column: 1 / -1;">
-                    <span class="stat-title">Classifica Crescita</span>
-                    <div id="growth-ranking-container" style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
-                        <!-- Le barre verranno generate dal JS -->
-                    </div>
+                <!-- Banner notifiche (id e logica invariati) -->
+                <div id="notification-prompt" class="notice hidden">
+                    <h3>Attiva le notifiche</h3>
+                    <p>Servono per non perdere la foto di ogni giorno.</p>
+                    <button id="btn-enable-notif" class="btn btn-primary">Consenti notifiche</button>
                 </div>
 
-            <button id="btn-open-calendar" class="btn-secondary">📅 Guarda il Calendario</button>
+                <div class="hero">
+                    <div class="hero-top">
+                        <span class="day-label">Giorno</span>
+                        <span id="countdown-pill" class="countdown-badge skeleton">&nbsp;</span>
+                    </div>
+                    <div class="day-figure">
+                        <span id="stat-days-passed" class="day-number">0</span>
+                        <span class="day-total">/<span id="stat-total-days">115</span></span>
+                    </div>
+                    <div id="day-ticks" class="ticks" aria-hidden="true"></div>
+                </div>
 
-            <div id="admin-controls" class="hidden" style="margin-top:20px;">
-                <button id="btn-unlock-challenge" class="btn-admin">🚀 Admin: Inizia Sfida</button>
-            </div>
-        </section>
+                <div class="section">
+                    <div class="section-head">
+                        <h3 class="section-title">Oggi</h3>
+                        <span class="section-meta"><b id="stat-photos-today">-/-</b> hanno scattato</span>
+                    </div>
+                    <div id="missing-users-container" class="dots"></div>
+                </div>
 
-        <section id="view-camera" class="view">
-            <div class="camera-wrapper">
-                <!-- Selettore Fantasma / Sagoma -->
+                <div id="home-action-card" class="action-card is-loading"></div>
+
+                <div id="admin-controls" class="hidden">
+                    <button id="btn-unlock-challenge" class="btn btn-admin">Admin: inizia la sfida</button>
+                </div>
+
+                <button id="btn-recap" class="recap-entry">
+                    <span class="recap-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>
+                    </span>
+                    <span class="recap-text">
+                        <b>Recap veloce</b>
+                        <small>Le tue 4 foto chiave in un'unica immagine</small>
+                    </span>
+                    <svg class="chev" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                </button>
+            </section>
+
+            <!-- CALENDARIO -->
+            <section id="view-calendar" class="view">
+                <div class="page-head">
+                    <h2 class="page-title">Calendario</h2>
+                    <p id="calendar-sub" class="page-sub"></p>
+                </div>
+                <div class="weekday-row" aria-hidden="true">
+                    <span>L</span><span>M</span><span>M</span><span>G</span><span>V</span><span>S</span><span>D</span>
+                </div>
+                <div id="calendar-container" class="calendar-list"></div>
+            </section>
+
+        </main>
+
+        <!-- TAB BAR (visibile solo su Oggi e Calendario, via CSS) -->
+        <nav class="tabbar" aria-label="Navigazione">
+            <button class="tab" data-view="view-home">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5h3l1.6-2.5h6.8L17 8.5h3a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>
+                <span>Oggi</span>
+            </button>
+            <button class="tab" data-view="view-calendar">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+                <span>Calendario</span>
+            </button>
+        </nav>
+
+        <!-- FOTOCAMERA (a schermo intero, senza tab bar) -->
+        <section id="view-camera" class="view view-camera">
+            <div class="camera-top">
+                <button id="btn-camera-close" class="icon-btn" aria-label="Chiudi fotocamera">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                </button>
                 <div class="ghost-controls" id="ghost-controls">
                     <button id="btn-ghost-photo" class="ghost-btn">Foto di ieri</button>
                     <button id="btn-ghost-shape" class="ghost-btn">Sagoma</button>
+                    <button id="btn-ghost-off" class="ghost-btn">Nessuna</button>
                 </div>
+                <span class="camera-top-spacer"></span>
+            </div>
 
+            <div class="camera-wrapper">
                 <video id="camera-stream" autoplay playsinline muted></video>
                 <canvas id="camera-canvas" class="hidden"></canvas>
                 <div id="ghost-overlay" class="ghost-overlay"></div>
                 <div id="funny-phrase-overlay" class="hidden"></div>
             </div>
-            
+
             <div class="camera-actions">
-                <button id="btn-capture" class="btn-shutter"></button>
+                <button id="btn-capture" class="btn-shutter" aria-label="Scatta"></button>
                 <div id="retake-actions" class="hidden">
-                    <button id="btn-retake" class="btn-secondary">Rifai 🔄</button>
-                    <button id="btn-upload" class="btn-primary">Invia 🚀</button>
+                    <button id="btn-retake" class="btn btn-dark">Rifai</button>
+                    <button id="btn-upload" class="btn btn-light">Invia</button>
                 </div>
             </div>
-            <button class="btn-text-only mt-3" onclick="checkStatus()">Annulla e torna alla Home</button>
-        </section>
-
-        <section id="view-calendar" class="view">
-            <h2 class="section-title">Calendario Baffi 📸</h2>
-            <div id="calendar-container" class="calendar-list">
-                <!-- Popolato da JS -->
-            </div>
-            <button class="btn-secondary mt-3" onclick="checkStatus()">Torna alla Home</button>
         </section>
 
     </div>
@@ -136,40 +164,82 @@
     <!-- SCHERMATA DI CARICAMENTO INVIO -->
     <div id="loading-overlay" class="loading-overlay hidden">
         <div class="spinner"></div>
-        <div style="font-size: 1.2rem; font-weight: 800; color: #fff;">Invio in corso... 🚀</div>
+        <div class="loading-text">Invio in corso…</div>
     </div>
 
-    
+    <!-- SUCCESSO -->
     <div id="success-overlay" class="success-overlay hidden">
         <canvas id="confetti-canvas"></canvas>
-        <div class="success-check">✅</div>
-        <div class="success-text">Inviata! 🎉</div>
+        <div class="success-check">
+            <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        </div>
+        <div id="success-text" class="success-text">Inviata!</div>
     </div>
 
-    <!-- Blocco Landscape -->
-    <div id="landscape-blocker">
-        <div>🔄<br>Gira il telefono<br>in verticale!</div>
+    <!-- FOGLIO DEL GIORNO (foto di tutti per un giorno) -->
+    <div id="day-sheet" class="sheet hidden">
+        <div class="sheet-panel">
+            <div class="sheet-head">
+                <div>
+                    <h3 id="sheet-day-num" class="sheet-day">Giorno 1</h3>
+                    <p id="sheet-day-date" class="sheet-date"></p>
+                </div>
+                <div class="sheet-side">
+                    <span id="sheet-day-count" class="sheet-count"></span>
+                    <button id="sheet-close" class="icon-btn icon-btn-light" aria-label="Chiudi">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div id="sheet-grid" class="photo-grid"></div>
+        </div>
     </div>
 
-    <!-- Modale per Foto e Commenti -->
+    <!-- MODALE FOTO + COMMENTI -->
     <div id="photo-modal" class="modal hidden">
         <div class="modal-content">
-            <span id="modal-close" class="modal-close">&times;</span>
-            <img id="modal-img" src="">
+            <button id="modal-close" class="modal-close" aria-label="Chiudi">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+            <img id="modal-img" src="" alt="">
             <div id="modal-author" class="modal-author"></div>
-            
             <div id="modal-comments" class="modal-comments"></div>
-            
             <div class="comment-input-area">
-                <input type="text" id="comment-input" maxlength="20" placeholder="1 parola per descriverla...">
-                <button id="btn-send-comment" class="btn-primary" style="padding: 10px; width: auto; flex-shrink: 0;">Invia</button>
+                <input type="text" id="comment-input" maxlength="20" placeholder="1 parola per descriverla…" autocomplete="off">
+                <button id="btn-send-comment" class="btn btn-light btn-inline">Invia</button>
             </div>
         </div>
     </div>
 
-    <script src="/static/js/app.js?v=15"></script>
+    <!-- MODALE RECAP -->
+    <div id="recap-modal" class="modal hidden">
+        <div class="modal-content recap-content">
+            <button id="recap-close" class="modal-close" aria-label="Chiudi">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+            <div id="recap-loading" class="recap-state">
+                <div class="spinner"></div>
+                <p>Preparo il recap…</p>
+            </div>
+            <div id="recap-message" class="recap-state hidden"><p id="recap-message-text"></p></div>
+            <div id="recap-ready" class="hidden">
+                <img id="recap-img" class="recap-img" alt="Recap Fodus Baffo">
+                <button id="btn-recap-save" class="btn btn-light">Salva in galleria</button>
+                <p class="recap-hint">Si apre il menu di condivisione: scegli "Salva immagine".</p>
+            </div>
+        </div>
+    </div>
 
-    <!-- SCRIPT AGGIUNTO: Sincronizzazione silente delle notifiche -->
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <!-- Blocco Landscape -->
+    <div id="landscape-blocker">
+        <div>Gira il telefono<br>in verticale</div>
+    </div>
+
+    <script src="/static/js/app.js?v=16"></script>
+
+    <!-- SCRIPT INVARIATO: sincronizzazione silente delle notifiche -->
     <script>
         if ('serviceWorker' in navigator && 'PushManager' in window) {
             navigator.serviceWorker.ready.then(function(registration) {
