@@ -7,7 +7,7 @@
 const PIN_KEY = 'fodus_baffo_pin';
 const CACHE_KEY = 'fodus_baffo_status_v1';
 const VAPID_PUBLIC_KEY = "BFR1mDVfW2DBRV4hZenFgMHm-GgVv3A09Z9f9SmSExZZuL6smbWy-mlk-vmZ3IiibKdnrmEka95XIcTUDchqvng";
-const FONT_STACK = '"Bricolage Grotesque", -apple-system, "Helvetica Neue", sans-serif';
+const FONT_STACK = '"Space Grotesk", -apple-system, "Helvetica Neue", sans-serif';
 
 let currentUser = null;
 let stream = null;
@@ -25,6 +25,31 @@ const $ = (id) => document.getElementById(id);
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
 ));
+const INITIALS_KEY = 'fodus_baffo_initials';
+/** Iniziali nome+cognome. Cerca il campo nell'utente, poi nella lista "chi manca", poi le ricorda. */
+function userInitials(user, stats) {
+    const clean = (v) => String(v || '').trim();
+    let ini = clean(user.iniziali);
+    if (!ini && stats && stats.missing_users) {
+        const m = stats.missing_users.find(u => u.nome === user.nome || u.nome === user.soprannome);
+        if (m) ini = clean(m.iniziali);
+    }
+    if (!ini) {
+        const n = clean(user.nome), c = clean(user.cognome);
+        if (n && c) ini = n[0] + c[0];
+        else {
+            const parts = n.split(/\s+/).filter(Boolean);
+            if (parts.length > 1) ini = parts[0][0] + parts[parts.length - 1][0];
+        }
+    }
+    if (ini) {
+        ini = ini.toUpperCase();
+        try { localStorage.setItem(INITIALS_KEY, ini); } catch (e) {}
+        return ini;
+    }
+    try { const saved = localStorage.getItem(INITIALS_KEY); if (saved) return saved; } catch (e) {}
+    return clean(user.nome || user.soprannome).slice(0, 2).toUpperCase();
+}
 const myName = () => (currentUser && (currentUser.soprannome || currentUser.nome)) || '';
 
 /* ---------- Frasi simpatiche ---------- */
@@ -370,9 +395,9 @@ function renderHome(status, opts = {}) {
     // Header: iniziali dell'utente
     const hu = $('header-user');
     if (hu && user) {
-        const nome = user.soprannome || user.nome || '';
-        hu.textContent = nome.slice(0, 2).toUpperCase();
-        hu.classList.toggle('hidden', !nome);
+        const ini = userInitials(user, s);
+        hu.textContent = ini;
+        hu.classList.toggle('hidden', !ini);
     }
 
     // Giorno di sfida + tacche
@@ -546,7 +571,7 @@ async function startCamera() {
         if (!hasLiveStream()) {
             stopCamera(); // mai due stream aperti insieme
             stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "user", width: { ideal: 1080 }, height: { ideal: 1440 } },
+                video: { facingMode: "user", aspectRatio: { ideal: 4 / 5 } },
                 audio: false
             });
         }
@@ -915,7 +940,7 @@ function drawCover(ctx, img, x, y, w, h) {
 }
 
 async function renderRecapImage(picks, name) {
-    try { await document.fonts.load(`800 40px ${FONT_STACK}`); await document.fonts.load(`500 30px ${FONT_STACK}`); } catch (e) {}
+    try { await document.fonts.load(`700 40px ${FONT_STACK}`); await document.fonts.load(`500 30px ${FONT_STACK}`); } catch (e) {}
     const [imgs, icon] = await Promise.all([
         Promise.all(picks.map(p => loadImage(p.url))),
         loadImage('/static/icons/icon-192.png').catch(() => null)
@@ -946,7 +971,7 @@ async function renderRecapImage(picks, name) {
     }
     ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = '#4B2E1E';
-    ctx.font = `800 58px ${FONT_STACK}`;
+    ctx.font = `700 58px ${FONT_STACK}`;
     ctx.fillText('Fodus Baffo', tx, 112);
     ctx.fillStyle = '#7C6B60';
     ctx.font = `500 32px ${FONT_STACK}`;
@@ -967,7 +992,7 @@ async function renderRecapImage(picks, name) {
 
         // Etichetta "Giorno N"
         const label = `Giorno ${p.dayNum}`;
-        ctx.font = `800 40px ${FONT_STACK}`;
+        ctx.font = `700 40px ${FONT_STACK}`;
         const pillW = ctx.measureText(label).width + 56;
         const pillH = 72;
         const px = x + 22, py = y + PH - 22 - pillH;
@@ -992,18 +1017,83 @@ async function renderRecapImage(picks, name) {
     });
 }
 
+let recapMine = null;
+let recapMode = 'recap';
+let recapToken = 0;
+
 function recapShow(which, msg) {
     $('recap-loading').classList.toggle('hidden', which !== 'loading');
     $('recap-message').classList.toggle('hidden', which !== 'message');
     $('recap-ready').classList.toggle('hidden', which !== 'ready');
+    $('compare-ready').classList.toggle('hidden', which !== 'compare');
     if (msg) $('recap-message-text').textContent = msg;
 }
 
+/* ---------- Confronto "prima e oggi" ---------- */
+function setComparePos(p) {
+    p = Math.max(0, Math.min(100, p));
+    $('cmp-before').style.clipPath = `inset(0 ${100 - p}% 0 0)`;
+    $('cmp-line').style.left = p + '%';
+    $('cmp-handle').style.left = p + '%';
+}
+function buildCompare(mine) {
+    const a = mine[0], b = mine[mine.length - 1];
+    $('cmp-before').src = a.url;
+    $('cmp-after').src = b.url;
+    $('cmp-tag-l').textContent = `Giorno ${a.dayNum}`;
+    $('cmp-tag-r').textContent = `Giorno ${b.dayNum}`;
+    setComparePos(50);
+}
+(function initCompareDrag() {
+    const box = $('compare');
+    let dragging = false;
+    const move = (e) => {
+        const r = box.getBoundingClientRect();
+        setComparePos(((e.clientX - r.left) / r.width) * 100);
+    };
+    box.addEventListener('pointerdown', (e) => { dragging = true; box.setPointerCapture(e.pointerId); move(e); });
+    box.addEventListener('pointermove', (e) => { if (dragging) move(e); });
+    ['pointerup', 'pointercancel'].forEach(ev => box.addEventListener(ev, () => { dragging = false; }));
+})();
+
+/* ---------- Modale: Recap | Prima e oggi ---------- */
+async function setRecapMode(mode) {
+    recapMode = mode;
+    document.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    const token = ++recapToken;
+
+    if (mode === 'compare') return recapShow('compare');
+
+    if (recapMine.length < 4) {
+        return recapShow('message', `Il recap si sblocca con 4 foto: ne hai ${recapMine.length}. Nel frattempo prova "Prima e oggi".`);
+    }
+    if (!recapBlob) {
+        recapShow('loading');
+        try {
+            const blob = await renderRecapImage(pickRecapPhotos(recapMine), myName());
+            if (token !== recapToken) return; // nel frattempo hai cambiato scheda
+            recapBlob = blob;
+            recapObjectUrl = URL.createObjectURL(blob);
+            $('recap-img').src = recapObjectUrl;
+        } catch (err) {
+            console.error('Recap:', err);
+            if (token === recapToken) recapShow('message', 'Non riesco a creare il recap. Riprova tra poco.');
+            return;
+        }
+    }
+    recapShow('ready');
+}
+document.querySelectorAll('.seg-btn').forEach(b => b.addEventListener('click', () => {
+    if (recapMine) setRecapMode(b.dataset.mode);
+}));
+
 async function openRecap() {
     recapShow('loading');
+    $('recap-seg').classList.add('hidden');
     openLayer($('recap-modal'));
     if (recapObjectUrl) { URL.revokeObjectURL(recapObjectUrl); recapObjectUrl = null; }
     recapBlob = null;
+    recapMine = null;
 
     try {
         if (!calendarData) {
@@ -1018,25 +1108,24 @@ async function openRecap() {
             if (p) mine.push({ dayNum: d.dayNum, url: p.url });
         });
 
-        if (mine.length < 4) {
-            return recapShow('message', `Il recap si sblocca con 4 foto: ne hai ${mine.length}. Continua così!`);
+        if (mine.length < 2) {
+            return recapShow('message', `Servono almeno 2 tue foto per il recap e il confronto: ne hai ${mine.length}.`);
         }
 
-        const picks = pickRecapPhotos(mine);
-        recapBlob = await renderRecapImage(picks, me);
-        recapObjectUrl = URL.createObjectURL(recapBlob);
-        $('recap-img').src = recapObjectUrl;
-        recapShow('ready');
+        recapMine = mine;
+        buildCompare(mine);
+        $('recap-seg').classList.remove('hidden');
+        setRecapMode(mine.length >= 4 ? 'recap' : 'compare');
     } catch (err) {
         console.error('Recap:', err);
-        recapShow('message', 'Non riesco a creare il recap. Riprova tra poco.');
+        recapShow('message', 'Non riesco a caricare le tue foto. Riprova tra poco.');
     }
 }
 
 $('btn-recap').addEventListener('click', openRecap);
 $('recap-close').addEventListener('click', () => closeLayer($('recap-modal')));
 
-// Passaggio 2: il tap su "Salva" apre subito il menu di condivisione (serve un gesto diretto su iOS)
+// Il tap su "Salva" apre subito il menu di condivisione (serve un gesto diretto su iOS)
 $('btn-recap-save').addEventListener('click', async () => {
     if (!recapBlob) return;
     const file = new File([recapBlob], 'fodus-baffo-recap.jpg', { type: 'image/jpeg' });

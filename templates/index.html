@@ -8,7 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="manifest" href="/static/manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -24,7 +24,7 @@
         <!-- HEADER: fascia marrone (regge anche la barra di stato trasparente di iOS) -->
         <header class="app-header">
             <img class="brand-icon" src="/static/icons/icon-192.png" alt="">
-            <span class="brand-name">Fodus Baffo</span>
+            <span class="brand-name"><b>Fodus</b> <span>Baffo</span></span>
             <span id="header-user" class="header-user hidden"></span>
         </header>
 
@@ -97,7 +97,7 @@
                     </span>
                     <span class="recap-text">
                         <b>Recap veloce</b>
-                        <small>Le tue 4 foto chiave in un'unica immagine</small>
+                        <small>Recap da salvare e confronto prima/oggi</small>
                     </span>
                     <svg class="chev" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </button>
@@ -217,6 +217,10 @@
             <button id="recap-close" class="modal-close" aria-label="Chiudi">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
             </button>
+            <div id="recap-seg" class="seg hidden">
+                <button class="seg-btn active" data-mode="recap">Recap</button>
+                <button class="seg-btn" data-mode="compare">Prima e oggi</button>
+            </div>
             <div id="recap-loading" class="recap-state">
                 <div class="spinner"></div>
                 <p>Preparo il recap…</p>
@@ -226,6 +230,19 @@
                 <img id="recap-img" class="recap-img" alt="Recap Fodus Baffo">
                 <button id="btn-recap-save" class="btn btn-light">Salva in galleria</button>
                 <p class="recap-hint">Si apre il menu di condivisione: scegli "Salva immagine".</p>
+            </div>
+            <div id="compare-ready" class="hidden">
+                <div id="compare" class="compare">
+                    <img id="cmp-after" alt="">
+                    <img id="cmp-before" alt="">
+                    <div id="cmp-line" class="cmp-line"></div>
+                    <div id="cmp-handle" class="cmp-handle">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/></svg>
+                    </div>
+                    <span id="cmp-tag-l" class="cmp-tag l"></span>
+                    <span id="cmp-tag-r" class="cmp-tag r"></span>
+                </div>
+                <p class="compare-hint">Trascina per confrontare</p>
             </div>
         </div>
     </div>
