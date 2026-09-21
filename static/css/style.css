@@ -31,8 +31,7 @@
 
 html, body { 
     height: 100%; 
-    background: linear-gradient(to bottom, var(--brown) 0%, var(--brown) 50%, #ffffff 50%, #ffffff 100%);
-    background-attachment: fixed;
+    background: #ffffff;
 }
 
 body {
@@ -57,7 +56,8 @@ button { cursor: pointer; }
     flex-direction: column;
     max-width: 480px;
     margin: 0 auto;
-    background: var(--white);
+    background: linear-gradient(to bottom, var(--brown) 0%, var(--brown) 50%, var(--white) 50%, var(--white) 100%);
+    background-attachment: fixed;
 }
 
 .app-header {
