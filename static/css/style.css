@@ -31,7 +31,8 @@
 
 html, body { 
     height: 100%; 
-    background: #ffffff;
+    background: linear-gradient(to bottom, var(--brown) 0%, var(--brown) 50%, #ffffff 50%, #ffffff 100%);
+    background-attachment: fixed;
 }
 
 body {
