@@ -18,7 +18,7 @@
     --berry: #C43D3D;        /* urgenza */
 
     --safe-top: env(safe-area-inset-top, 0px);
-    --safe-bottom: env(safe-area-inset-bottom, -150px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 * {
@@ -56,7 +56,7 @@ button { cursor: pointer; }
     flex-direction: column;
     max-width: 480px;
     margin: 0 auto;
-    background: transparent;
+    background: var(--white);
 }
 
 .app-header {
@@ -112,7 +112,7 @@ button { cursor: pointer; }
 .tabbar {
     display: none;
     position: fixed;
-    bottom: calc(var(--safe-bottom) - 30px);
+    bottom: calc(var(--safe-bottom) + 4px);
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 24px);
