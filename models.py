@@ -10,6 +10,7 @@ class User(db.Model):
     soprannome = db.Column(db.String(50), nullable=True)
     is_admin = db.Column(db.Boolean, default=False)
     photos = db.relationship('Photo', backref='author', lazy=True)
+    push_subscription = db.Column(db.Text, nullable=True)
 
 class Photo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -18,6 +19,7 @@ class Photo(db.Model):
     date_created = db.Column(db.Date, default=datetime.utcnow().date)
     timestamp = db.Column(db.DateTime, default=datetime.now)
     comments = db.relationship('Comment', backref='photo', lazy=True, cascade="all, delete-orphan")
+    ai_score = db.Column(db.Integer, nullable=True)
 
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
