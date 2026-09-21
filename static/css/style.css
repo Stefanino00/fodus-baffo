@@ -112,7 +112,7 @@ button { cursor: pointer; }
 .tabbar {
     display: none;
     position: fixed;
-    bottom: calc(var(--safe-bottom) - 6px);
+    bottom: calc(var(--safe-bottom) - 30px);
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 24px);
