@@ -26,23 +26,16 @@
     margin: 0;
     padding: 0;
     -webkit-tap-highlight-color: transparent;
+    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif !important;
 }
 
-html { height: 100%; background: var(--brown); }
-body { height: 100%; }
-/* Striscia fissa marrone sotto la barra di stato: iOS ne legge il colore per l'effetto sfumato */
-body::before {
-    content: '';
-    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-    height: var(--safe-top);
+html, body { 
+    height: 100%; 
     background: var(--brown);
-    pointer-events: none;
+    background: linear-gradient(to bottom, var(--brown) 0%, var(--brown) 50%, var(--white) 50%, var(--white) 100%);
 }
-@media (min-width: 481px) { html { background: var(--flour); } }
 
 body {
-    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-    background: transparent;
     color: var(--ink);
     overflow: hidden;
     overscroll-behavior: none;
@@ -50,7 +43,7 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-button, input { font-family: inherit; color: inherit; }
+button, input { color: inherit; }
 button { cursor: pointer; }
 
 .hidden { display: none !important; }
@@ -64,7 +57,7 @@ button { cursor: pointer; }
     flex-direction: column;
     max-width: 480px;
     margin: 0 auto;
-    background: var(--white);
+    background: transparent;
 }
 
 .app-header {
@@ -72,7 +65,8 @@ button { cursor: pointer; }
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: calc(var(--safe-top) + 10px) 20px 10px;
+    /* Aumentato il padding per staccarsi dall'orologio iOS ed evitare sfocature */
+    padding: calc(var(--safe-top) + 24px) 20px 24px;
     background: var(--brown);
     color: #fff;
 }
@@ -94,7 +88,10 @@ button { cursor: pointer; }
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    padding: 20px 20px 28px;
+    padding: 24px 20px 28px;
+    background: var(--white);
+    border-radius: 32px 32px 0 0;
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.08);
 }
 
 .view { display: none; }
@@ -116,7 +113,8 @@ button { cursor: pointer; }
 .tabbar {
     display: none;
     flex: none;
-    padding: 2px 12px max(4px, calc(var(--safe-bottom) - 14px));
+    /* Riduciamo l'offset di var(--safe-bottom) per spingere le icone in basso */
+    padding: 8px 12px max(6px, calc(var(--safe-bottom) * 0.5));
     background: var(--white);
     border-top: 1px solid var(--line);
 }
@@ -130,7 +128,7 @@ body[data-view="view-calendar"] .tabbar { display: flex; }
     flex-direction: column;
     align-items: center;
     gap: 2px;
-    padding: 7px 0 3px;
+    padding: 4px 0 2px;
     border: 0;
     background: none;
     color: var(--muted);
@@ -142,7 +140,7 @@ body[data-view="view-calendar"] .tabbar { display: flex; }
 .tab.active::before {
     content: '';
     position: absolute;
-    top: -2px; left: 34%; right: 34%;
+    top: -4px; left: 34%; right: 34%;
     height: 3px;
     border-radius: 0 0 3px 3px;
     background: var(--brown);
@@ -321,22 +319,24 @@ body[data-view="view-calendar"] .tabbar { display: flex; }
 .notice h3 { font-size: 1.1rem; font-weight: 700; color: var(--brown); }
 .notice p { margin: 4px 0 12px; font-size: 0.9rem; color: var(--muted); }
 
+/* Bottone Recap reso molto più fine e minimale */
 .recap-entry {
     display: flex;
     align-items: center;
     gap: 14px;
     width: 100%;
-    margin-top: 14px;
-    padding: 16px;
-    border: 0;
-    border-radius: 20px;
-    background: var(--flour);
+    margin-top: 24px;
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: transparent;
     color: var(--brown);
     text-align: left;
     transition: transform 0.15s ease;
 }
 .recap-entry:active { transform: scale(0.98); }
-.recap-icon { width: 46px; height: 46px; border-radius: 14px; background: #fff; display: grid; place-items: center; }
+.recap-icon { width: 40px; height: 40px; border-radius: 12px; background: var(--flour); display: grid; place-items: center; }
+.recap-icon svg { width: 20px; height: 20px; }
 .recap-text { flex: 1; display: flex; flex-direction: column; gap: 2px; }
 .recap-text b { font-size: 1.02rem; }
 .recap-text small { color: var(--muted); font-size: 0.82rem; }
@@ -670,46 +670,4 @@ body[data-view="view-calendar"] .tabbar { display: flex; }
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
-}
-
-/* =========================================
-   FIX DEFINITIVO v2 (Top Marrone, Bottom Bianco)
-   ========================================= */
-
-/* 1. Sfondo di sistema: Marrone sopra (barra di stato), Bianco sotto (navbar) */
-html, body {
-    background: linear-gradient(to bottom, var(--brown) 0%, var(--brown) 50%, var(--white) 50%, var(--white) 100%) !important;
-}
-
-body::before {
-    display: none !important;
-}
-
-/* 2. Container trasparente per mostrare i colori di sistema dietro */
-.app {
-    background: transparent !important;
-}
-
-/* 3. Header Marrone pulito (staccato dall'orologio) */
-.app-header {
-    background: var(--brown) !important;
-    padding-top: calc(env(safe-area-inset-top) + 12px) !important;
-    padding-bottom: 24px !important;
-    border: none !important;
-}
-
-/* 4. Corpo centrale Bianco arrotondato */
-.app-main {
-    background: var(--white) !important;
-    border-radius: 32px 32px 0 0 !important;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.12) !important;
-}
-
-/* 5. Navbar Bianca abbassata al limite inferiore dello schermo */
-.tabbar {
-    background: var(--white) !important;
-    padding-top: 6px !important;
-    /* Rimuove i margini extra e usa solo la safe-area strettamente necessaria */
-    padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
-    border-top: 1px solid var(--line) !important;
 }
