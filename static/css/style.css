@@ -673,44 +673,43 @@ body[data-view="view-calendar"] .tabbar { display: flex; }
 }
 
 /* =========================================
-   FIX DEFINITIVO LAYOUT (Top Bar & Nav Bar)
+   FIX DEFINITIVO v2 (Top Marrone, Bottom Bianco)
    ========================================= */
 
-/* 1. Sfondo bicolore: Marrone in alto, Bianco in basso per coprire il buco */
+/* 1. Sfondo di sistema: Marrone sopra (barra di stato), Bianco sotto (navbar) */
 html, body {
-    background: var(--white) !important;
-}
-body::before {
-    display: none !important; /* Rimuove vecchi hack sfocati */
-}
-.app {
-    /* Il gradiente nasconde la linea di stacco dietro il pannello bianco centrale */
-    background: linear-gradient(to bottom, var(--brown) 0%, var(--brown) 30vh, var(--white) 30vh, var(--white) 100%) !important;
+    background: linear-gradient(to bottom, var(--brown) 0%, var(--brown) 50%, var(--white) 50%, var(--white) 100%) !important;
 }
 
-/* 2. Header: Spingiamo il logo e le iniziali in basso, lontano dall'orologio iOS */
+body::before {
+    display: none !important;
+}
+
+/* 2. Container trasparente per mostrare i colori di sistema dietro */
+.app {
+    background: transparent !important;
+}
+
+/* 3. Header Marrone pulito (staccato dall'orologio) */
 .app-header {
-    background: transparent !important; 
-    /* Aggiunge 24px extra alla safe-area nativa dell'iPhone */
-    padding-top: calc(env(safe-area-inset-top) + 24px) !important;
+    background: var(--brown) !important;
+    padding-top: calc(env(safe-area-inset-top) + 12px) !important;
     padding-bottom: 24px !important;
-    padding-left: 20px !important;
-    padding-right: 20px !important;
     border: none !important;
 }
 
-/* 3. Main: Assicuriamo l'effetto "Card" arrotondata */
+/* 4. Corpo centrale Bianco arrotondato */
 .app-main {
     background: var(--white) !important;
     border-radius: 32px 32px 0 0 !important;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.15) !important;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.12) !important;
 }
 
-/* 4. Navbar: La incolliamo al fondo e le diamo respiro */
+/* 5. Navbar Bianca abbassata al limite inferiore dello schermo */
 .tabbar {
-    padding-top: 12px !important;
-    /* Usa la safe-area-bottom nativa per arrivare fino al bordo fisico dello schermo */
-    padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
     background: var(--white) !important;
+    padding-top: 6px !important;
+    /* Rimuove i margini extra e usa solo la safe-area strettamente necessaria */
+    padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
     border-top: 1px solid var(--line) !important;
 }
