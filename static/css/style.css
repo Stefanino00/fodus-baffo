@@ -32,7 +32,6 @@
 html, body { 
     height: 100%; 
     background: var(--brown);
-    background: linear-gradient(to bottom, var(--brown) 0%, var(--brown) 50%, var(--white) 50%, var(--white) 100%);
 }
 
 body {
@@ -114,9 +113,11 @@ button { cursor: pointer; }
     display: none;
     flex: none;
     /* Riduciamo l'offset di var(--safe-bottom) per spingere le icone in basso */
-    padding: 8px 12px max(6px, calc(var(--safe-bottom) * 0.5));
+    padding: 4px 12px max(6px, calc(var(--safe-bottom) * 0.5));
     background: var(--white);
     border-top: 1px solid var(--line);
+    margin: 0 12px max(4px, calc(var(--safe-bottom) * 0.2)) 12px;
+    border-radius: 32px;
 }
 body[data-view="view-home"] .tabbar,
 body[data-view="view-calendar"] .tabbar { display: flex; }
@@ -242,12 +243,42 @@ body[data-view="view-calendar"] .tabbar { display: flex; }
 @keyframes shimmer { to { background-position: -200% 0; } }
 
 /* 115 tacche: una per giorno. Alte ogni 10 giorni. */
-.ticks { display: flex; align-items: flex-end; gap: 1px; height: 34px; margin-top: 20px; }
-.ticks i { flex: 1; height: 12px; border-radius: 1px; background: var(--line); }
+.ticks { 
+    display: flex; 
+    align-items: flex-end; 
+    gap: 1px; 
+    height: 34px; 
+    margin-top: 20px;
+    padding: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+.ticks i { 
+    flex: 1; 
+    height: 12px; 
+    border-radius: 2px; 
+    background: rgba(232, 226, 220, 0.5);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease-out;
+}
 .ticks i.m { height: 20px; }
-.ticks i.on { background: var(--brown); }
-.ticks i.end { height: 34px; background: var(--berry); }
-.ticks i.now { height: 34px; background: var(--pine); }
+.ticks i.on { 
+    background: rgba(75, 46, 30, 0.7);
+    box-shadow: 0 4px 12px rgba(75, 46, 30, 0.2);
+}
+.ticks i.end { 
+    height: 34px; 
+    background: rgba(196, 61, 61, 0.8);
+    box-shadow: 0 6px 16px rgba(196, 61, 61, 0.25);
+}
+.ticks i.now { 
+    height: 34px; 
+    background: rgba(30, 107, 78, 0.8);
+    box-shadow: 0 6px 16px rgba(30, 107, 78, 0.25);
+}
 
 /* ---------- Home: oggi ---------- */
 
