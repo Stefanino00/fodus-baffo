@@ -18,6 +18,9 @@ let currentPhotoRef = null;   // foto attualmente aperta nel modale
 let lastStatus = null;        // ultimo /api/status ricevuto (o dalla cache)
 let lastStatusAt = 0;
 let calendarData = null;      // ultimo /api/calendar
+let sheetDayList = [];        // giorni con foto, in ordine cronologico (per swipe nel foglio)
+let sheetDayIndex = -1;       // indice del giorno attualmente aperto nel foglio
+let sheetTotal = 0;           // numero totale di partecipanti (per il conteggio nel foglio)
 let recapBlob = null;
 let recapObjectUrl = null;
 let isFirstRender = true;     // flag per animare solo al primo caricamento
@@ -802,6 +805,7 @@ function renderCalendar(data, opts = {}) {
     });
 
     let todayCell = null;
+    const daysWithPhotos = [];
     months.forEach(m => {
         const block = document.createElement('div');
         block.className = 'month-block';
@@ -833,6 +837,7 @@ function renderCalendar(data, opts = {}) {
                 cell.classList.add('has-photos');
                 if (total && info.count >= total) cell.classList.add('all-done');
                 cell.addEventListener('click', () => openDaySheet(d, total));
+                daysWithPhotos.push(d);
             }
             grid.appendChild(cell);
         });
@@ -840,6 +845,9 @@ function renderCalendar(data, opts = {}) {
         block.appendChild(grid);
         container.appendChild(block);
     });
+
+    sheetDayList = daysWithPhotos;
+    sheetTotal = total;
 
     if (opts.scrollToToday && todayCell) {
         requestAnimationFrame(() => todayCell.scrollIntoView({ block: 'center' }));
@@ -852,6 +860,8 @@ function renderCalendar(data, opts = {}) {
 function openDaySheet(d, total) {
     const info = d.info;
     if (!info.photos || !info.photos.length) return;
+    sheetDayIndex = sheetDayList.findIndex(x => x.key === d.key);
+    sheetTotal = total;
     $('sheet-day-num').textContent = `Giorno ${d.dayNum}`;
     $('sheet-day-date').textContent = new Date(d.key + 'T00:00:00')
         .toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -871,6 +881,37 @@ function openDaySheet(d, total) {
 }
 $('sheet-close').addEventListener('click', () => closeLayer($('day-sheet')));
 $('day-sheet').addEventListener('click', (e) => { if (e.target === $('day-sheet')) closeLayer($('day-sheet')); });
+
+// Naviga al giorno precedente/successivo (tra i giorni con foto) dentro il foglio aperto
+function navigateDaySheet(delta) {
+    if (!sheetDayList.length || sheetDayIndex === -1) return;
+    const newIndex = sheetDayIndex + delta;
+    if (newIndex < 0 || newIndex >= sheetDayList.length) return; // niente oltre oggi, niente prima del primo giorno
+    openDaySheet(sheetDayList[newIndex], sheetTotal);
+}
+
+// Swipe orizzontale sul foglio del giorno per scorrere tra i giorni.
+// A destra (dx > 0) = giorno successivo (bloccato se sei già su oggi).
+// A sinistra (dx < 0) = giorno precedente.
+(function initDaySheetSwipe() {
+    const sheet = $('day-sheet');
+    let startX = 0, startY = 0, tracking = false;
+    sheet.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        tracking = true;
+    }, { passive: true });
+    sheet.addEventListener('touchend', (e) => {
+        if (!tracking) return;
+        tracking = false;
+        const t = e.changedTouches[0];
+        const dx = t.clientX - startX;
+        const dy = t.clientY - startY;
+        if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
+        navigateDaySheet(dx > 0 ? 1 : -1);
+    }, { passive: true });
+})();
 
 /* =========================================================
    FOTO + COMMENTI
