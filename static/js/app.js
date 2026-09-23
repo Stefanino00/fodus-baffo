@@ -909,7 +909,7 @@ function navigateDaySheet(delta) {
         const dx = t.clientX - startX;
         const dy = t.clientY - startY;
         if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
-        navigateDaySheet(dx > 0 ? 1 : -1);
+        navigateDaySheet(dx > 0 ? -1 : 1);
     }, { passive: true });
 })();
 
