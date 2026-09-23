@@ -31,7 +31,8 @@
 
 html, body { 
     height: 100%; 
-    background: var(--brown);
+    background: var(--white);
+
 }
 
 body {
@@ -60,6 +61,8 @@ button { cursor: pointer; }
 }
 
 .app-header {
+    position: relative;
+    z-index: 2;
     flex: none;
     display: flex;
     align-items: center;
@@ -68,6 +71,25 @@ button { cursor: pointer; }
     padding: calc(var(--safe-top) + 24px) 20px 24px;
     background: var(--brown);
     color: #fff;
+}
+/* "Abbraccio": angoli invertiti che fanno sembrare l'header
+   avvolgere gli angoli arrotondati del pannello bianco sotto */
+.app-header::before,
+.app-header::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    width: 32px;
+    height: 32px;
+    pointer-events: none;
+}
+.app-header::before {
+    left: 0;
+    background: radial-gradient(circle at bottom right, transparent 32px, var(--brown) 32.5px);
+}
+.app-header::after {
+    right: 0;
+    background: radial-gradient(circle at bottom left, transparent 32px, var(--brown) 32.5px);
 }
 
 .brand-icon { width: 30px; height: 30px; border-radius: 8px; background: #fff; }
