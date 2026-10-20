@@ -493,36 +493,122 @@ def get_stats():
     # Ordina classifica: prima chi ha saltato meno giorni, poi chi ha l'orario medio più presto
     user_stats.sort(key=lambda x: (x['missed_days'], x['avg_offset']))
 
-    # Calcolo Peggior Ritardatario / Assente
-    worst_by_misses = sorted(user_stats, key=lambda x: (-x['missed_days'], -x['avg_offset']))[0]
+    # --- CALCOLO PEGGIOR RITARDATARIO / ASSENTE (CON GESTIONE PARI MERITO) ---
     import random
-    if worst_by_misses['missed_days'] > 0:
-        insulti = [
-            f"{worst_by_misses['nome']} si è già dimenticato di mandare la foto {worst_by_misses['missed_days']} volte.",
-            f"Qualcuno metta una sveglia a {worst_by_misses['nome']}: {worst_by_misses['missed_days']} giorni saltati finora.",
-            f"{worst_by_misses['nome']} ha bucato l'invio {worst_by_misses['missed_days']} volte. Un solo compito avevi!",
-            f"Anche oggi {worst_by_misses['nome']} recupera domani: {worst_by_misses['missed_days']} foto mancanti."
-        ]
+
+    def format_names(names_list):
+        if len(names_list) == 1:
+            return names_list[0]
+        return ", ".join(names_list[:-1]) + " e " + names_list[-1]
+
+    max_misses = max((u['missed_days'] for u in user_stats), default=0)
+
+    if max_misses > 0:
+        # Tutti quelli che condividono il record negativo di giorni saltati
+        tied_worst = [u for u in user_stats if u['missed_days'] == max_misses]
+        names_str = format_names([u['nome'] for u in tied_worst])
+        initials_list = [u['iniziali'] for u in tied_worst]
+        n = max_misses
+        volte_str = "volta" if n == 1 else "volte"
+        giorni_str = "giorno" if n == 1 else "giorni"
+
+        if len(tied_worst) == 1:
+            insulti = [
+                f"{names_str} si è già dimenticato di mandare la foto {n} {volte_str}.",
+                f"Qualcuno metta una sveglia a {names_str}: {n} {giorni_str} saltati finora.",
+                f"{names_str} ha bucato l'invio {n} {volte_str}. Un solo compito avevi!",
+                f"Anche oggi {names_str} recupera domani: {n} foto mancanti all'appello.",
+                f"Per {names_str} la sfida è opzionale: già {n} {giorni_str} di buco.",
+                f"Chi ha visto {names_str}? Latitante per {n} {giorni_str}.",
+                f"{names_str} tratta il calendario come un formaggio svizzero: {n} buchi.",
+                f"Premio 'Dopo la faccio' assegnato a {names_str} ({n} assenze).",
+                f"A {names_str} pesa il dito: {n} foto non pervenute.",
+                f"Meno male che {names_str} doveva essere costante: {n} {giorni_str} saltati.",
+                f"Allarme rosso per {names_str}: {n} invii andati nel dimenticatoio.",
+                f"{names_str} colleziona assenze come figurine: siamo a quota {n}."
+            ]
+            tag = "Peggior ritardatario · Assenze"
+        elif len(tied_worst) < total_users:
+            insulti = [
+                f"Pari merito del disonore: {names_str} hanno saltato {n} {giorni_str} a testa.",
+                f"{names_str} vanno a braccetto: {n} foto bucate per ciascuno.",
+                f"Complotto tra {names_str}: entrambi fermi a {n} {giorni_str} saltati.",
+                f"Qualcuno svegli {names_str}: {n} assenze a testa e zero rimorsi.",
+                f"{names_str} si coprono a vicenda, ma i {n} buchi in calendario restano.",
+                f"Sfida nella sfida tra {names_str} a chi salta più giorni: pari a quota {n}!",
+                f"Non sapevamo chi insultare, quindi tocca a {names_str}: {n} foto mancanti a testa.",
+                f"Sincronia perfetta nel dimenticarsi la foto: {names_str} a quota {n} assenze.",
+                f"{names_str} hanno preso il calendario come un suggerimento: {n} {giorni_str} bucati.",
+                f"Il club dei latitanti è guidato da {names_str} con {n} assenze a testa."
+            ]
+            tag = f"Peggiori a pari merito ({len(tied_worst)}) · Assenze"
+        else:
+            insulti = [
+                f"Disastro totale: avete saltato tutti quanti {n} {giorni_str} a testa!",
+                f"Pari merito generale: tutti a quota {n} assenze. Neanche uno che si salvi!",
+                f"Complimenti a tutti e {total_users}: {n} {giorni_str} bucati a testa, costanza zero.",
+                f"Nessuno può prendere in giro nessuno: avete tutti {n} foto mancanti!"
+            ]
+            tag = "Disastro collettivo · Tutti a pari merito"
+
         shame = {
-            'nome': worst_by_misses['nome'],
-            'iniziali': worst_by_misses['iniziali'],
-            'tag': 'Peggior ritardatario · Assenze',
+            'iniziali_list': initials_list,
+            'tag': tag,
             'insult': random.choice(insulti)
         }
+
     else:
+        # Nessuno ha saltato giorni: guardiamo l'orario medio più lento (arrotondato al minuto per gestire i pari merito veri)
         with_photos = [u for u in user_stats if u['photos_count'] > 0]
-        slowest = sorted(with_photos, key=lambda x: -x['avg_offset'])[0] if with_photos else user_stats[-1]
-        insulti_lenti = [
-            f"{slowest['nome']} manda la foto in media alle {slowest['avg_time']}. Sempre all'ultimo minuto.",
-            f"Con una media delle {slowest['avg_time']}, {slowest['nome']} è ufficialmente il più lento del gruppo.",
-            f"Zero giorni saltati, ma {slowest['nome']} (media {slowest['avg_time']}) aspetta sempre la fine della giornata."
-        ]
-        shame = {
-            'nome': slowest['nome'],
-            'iniziali': slowest['iniziali'],
-            'tag': 'Peggior ritardatario',
-            'insult': random.choice(insulti_lenti)
-        }
+        if with_photos:
+            max_min = max(int(round(u['avg_offset'])) for u in with_photos)
+            tied_slow = [u for u in with_photos if int(round(u['avg_offset'])) == max_min]
+            names_str = format_names([u['nome'] for u in tied_slow])
+            initials_list = [u['iniziali'] for u in tied_slow]
+            avg_t = tied_slow[0]['avg_time']
+
+            if len(tied_slow) == 1:
+                insulti_lenti = [
+                    f"{names_str} manda la foto in media alle {avg_t}. Sempre all'ultimo minuto.",
+                    f"Con una media delle {avg_t}, {names_str} è ufficialmente il più lento del gruppo.",
+                    f"Zero giorni saltati, ma {names_str} (media {avg_t}) aspetta sempre la fine della giornata.",
+                    f"{names_str} vive sul filo del rasoio: orario medio di invio {avg_t}.",
+                    f"Calma olimpica per {names_str}: prima delle {avg_t} di media non se ne parla.",
+                    f"Per fortuna la giornata dura 24 ore, altrimenti {names_str} (media {avg_t}) non ce la farebbe mai.",
+                    f"Se non arriva la notifica delle 22:00, {names_str} (media {avg_t}) neanche apre l'app.",
+                    f"Riflessi da bradipo per {names_str}: scatto medio fissato alle {avg_t}.",
+                    f"{names_str} ama il brivido del ritardo: media oraria inchiodata alle {avg_t}.",
+                    f"Tutti hanno già fatto, e poi c'è {names_str} che se la prende comoda fino alle {avg_t}."
+                ]
+                tag = "Peggior ritardatario"
+            elif len(tied_slow) < total_users:
+                insulti_lenti = [
+                    f"Incredibile pari merito: {names_str} hanno la stessa identica media delle {avg_t}!",
+                    f"{names_str} aspettano insieme l'ultimo minuto: media delle {avg_t} per entrambi.",
+                    f"Coppia da brivido: {names_str} mandano la foto in media alle {avg_t} spaccate.",
+                    f"Zero assenze, ma {names_str} condividono il record di lentezza (media {avg_t}).",
+                    f"Si mettono d'accordo su WhatsApp? {names_str} sono appaiati in fondo con media {avg_t}."
+                ]
+                tag = f"Peggiori ritardatari ({len(tied_slow)} a pari merito)"
+            else:
+                insulti_lenti = [
+                    f"Clamoroso: avete tutti esattamente la stessa media oraria ({avg_t})!",
+                    f"Sincronia assurda: tutti e {total_users} in perfetto pari merito con media {avg_t}."
+                ]
+                tag = "Tutti a pari merito"
+
+            shame = {
+                'iniziali_list': initials_list,
+                'tag': tag,
+                'insult': random.choice(insulti_lenti)
+            }
+        else:
+            # Caso limite: giorno 1, ancora 0 foto caricate da chiunque
+            shame = {
+                'iniziali_list': [u['iniziali'] for u in user_stats],
+                'tag': 'Ancora tutti a zero',
+                'insult': "Nessuno ha ancora inviato una foto. Vediamo chi sarà il primo a rompere il ghiaccio!"
+            }
 
     with_photos = [u for u in user_stats if u['photos_count'] > 0]
     early_bird = min(with_photos, key=lambda x: x['avg_offset']) if with_photos else None
@@ -543,7 +629,6 @@ def get_stats():
         },
         'leaderboard': user_stats
     })
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5040, debug=True)
