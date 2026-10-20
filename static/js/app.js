@@ -1266,9 +1266,9 @@ function renderStats(data) {
     ].filter(r => r.info);
 
     box.innerHTML = `
-        <!-- PEGGIOR RITARDATARIO -->
+        <!-- PEGGIOR RITARDATARIO (ANCHE MULTIPLO) -->
         <div class="shame-card">
-            <div class="shame-avatar">${escapeHtml(shame.iniziali)}</div>
+            <div class="shame-avatars">${avatarsHtml}</div>
             <div class="shame-body">
                 <span class="shame-tag">${escapeHtml(shame.tag)}</span>
                 <p class="shame-text">${escapeHtml(shame.insult)}</p>
