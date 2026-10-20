@@ -150,7 +150,8 @@ button { cursor: pointer; }
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 body[data-view="view-home"] .tabbar,
-body[data-view="view-calendar"] .tabbar { display: flex; }
+body[data-view="view-calendar"] .tabbar,
+body[data-view="view-stats"] .tabbar { display: flex; }
 
 .tab {
     position: relative;
@@ -736,4 +737,200 @@ body[data-view="view-calendar"] .tabbar { display: flex; }
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}
+
+
+/* ---------- Statistiche ---------- */
+
+.shame-card {
+    margin-top: 14px;
+    padding: 18px;
+    border-radius: 24px;
+    background: #FDF2F2;
+    border: 2px solid var(--berry);
+    color: var(--ink);
+    display: flex;
+    gap: 14px;
+    align-items: center;
+}
+.shame-avatar {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--berry);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: grid;
+    place-items: center;
+    flex: none;
+}
+.shame-body { flex: 1; }
+.shame-tag {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--berry);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+}
+.shame-text {
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--brown);
+}
+
+.stats-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 16px;
+}
+.kpi-box {
+    background: var(--flour);
+    border-radius: 18px;
+    padding: 12px 10px;
+    text-align: center;
+}
+.kpi-val {
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: var(--brown);
+    font-variant-numeric: tabular-nums;
+}
+.kpi-lbl {
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+.stats-block-title {
+    margin: 24px 0 10px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--brown);
+}
+
+.user-stat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.user-stat-card {
+    background: var(--flour);
+    border-radius: 20px;
+    padding: 14px 16px;
+}
+.user-stat-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+.user-stat-id {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.user-stat-rank {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--brown);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: grid;
+    place-items: center;
+}
+.user-stat-name {
+    font-weight: 700;
+    font-size: 1.02rem;
+    color: var(--brown);
+}
+.user-stat-time {
+    background: #fff;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--brown);
+    border: 1px solid var(--line);
+    font-variant-numeric: tabular-nums;
+}
+.user-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+}
+.ust-item b {
+    display: block;
+    font-size: 0.95rem;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+}
+.ust-item b.is-bad { color: var(--berry); }
+.ust-item b.is-good { color: var(--pine); }
+.ust-item span {
+    font-size: 0.68rem;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.badges-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+.badge-card {
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 12px 14px;
+    background: #fff;
+}
+.badge-head {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+    margin-bottom: 4px;
+}
+.badge-winner {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--brown);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.badge-val {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--pine);
+    margin-top: 2px;
+}
+
+.words-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.word-pill {
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--flour);
+    color: var(--brown);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+.word-pill small {
+    margin-left: 4px;
+    color: var(--muted);
+    font-weight: 600;
 }
