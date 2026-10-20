@@ -1256,7 +1256,15 @@ async function openStats() {
 
 function renderStats(data) {
     const box = $('stats-container');
-    const { summary, shame, records, leaderboard } = data;
+    if (!data || !data.summary) {
+        box.innerHTML = '<p class="empty-note">Dati statistiche non validi.</p>';
+        return;
+    }
+
+    const summary = data.summary || {};
+    const shame = data.shame || {};
+    const records = data.records || {};
+    const leaderboard = data.leaderboard || [];
 
     const recordItems = [
         { title: 'Media più mattiniera', info: records.early_avg },
@@ -1265,24 +1273,47 @@ function renderStats(data) {
         { title: 'Scatto più al limite', info: records.latest_shot }
     ].filter(r => r.info);
 
+    // --- QUI MANCAVANO QUESTE RIGHE NEL TUO CODICE ---
+    const avatarsList = (shame.iniziali_list && shame.iniziali_list.length)
+        ? shame.iniziali_list
+        : [shame.iniziali || '?'];
+
+    const avatarsHtml = avatarsList
+        .map(ini => `<div class="shame-avatar">${escapeHtml(ini)}</div>`)
+        .join('');
+    // --------------------------------------------------
+
+    let currentRank = 1;
+    const rankedLeaderboard = leaderboard.map((u, idx) => {
+        if (idx > 0) {
+            const prev = leaderboard[idx - 1];
+            const sameMisses = u.missed_days === prev.missed_days;
+            const sameAvg = u.avg_time === prev.avg_time;
+            if (!(sameMisses && sameAvg)) {
+                currentRank = idx + 1;
+            }
+        }
+        return { ...u, rank: currentRank };
+    });
+
     box.innerHTML = `
         <!-- PEGGIOR RITARDATARIO (ANCHE MULTIPLO) -->
         <div class="shame-card">
             <div class="shame-avatars">${avatarsHtml}</div>
             <div class="shame-body">
-                <span class="shame-tag">${escapeHtml(shame.tag)}</span>
-                <p class="shame-text">${escapeHtml(shame.insult)}</p>
+                <span class="shame-tag">${escapeHtml(shame.tag || 'Peggior ritardatario')}</span>
+                <p class="shame-text">${escapeHtml(shame.insult || '')}</p>
             </div>
         </div>
 
         <!-- RIEPILOGO GRUPPO -->
         <div class="stats-kpi-row">
             <div class="kpi-box">
-                <div class="kpi-val">${summary.total_photos}</div>
+                <div class="kpi-val">${summary.total_photos ?? 0}</div>
                 <div class="kpi-lbl">Foto totali inviate</div>
             </div>
             <div class="kpi-box">
-                <div class="kpi-val">${summary.perfect_days} <span style="font-size:0.95rem;font-weight:400;color:var(--muted)">su ${summary.total_days_elapsed}</span></div>
+                <div class="kpi-val">${summary.perfect_days ?? 0} <span style="font-size:0.95rem;font-weight:400;color:var(--muted)">su ${summary.total_days_elapsed ?? 0}</span></div>
                 <div class="kpi-lbl">Giorni con foto di tutti</div>
             </div>
         </div>
@@ -1290,11 +1321,11 @@ function renderStats(data) {
         <!-- CLASSIFICA COSTANZA E ORARI -->
         <h3 class="stats-block-title">Classifica & Orario Medio</h3>
         <div class="user-stat-list">
-            ${leaderboard.map((u, idx) => `
+            ${rankedLeaderboard.map(u => `
                 <div class="user-stat-card">
                     <div class="user-stat-top">
                         <div class="user-stat-id">
-                            <div class="user-stat-rank">${idx + 1}°</div>
+                            <div class="user-stat-rank">${u.rank}°</div>
                             <span class="user-stat-name">${escapeHtml(u.nome)}</span>
                         </div>
                         <span class="user-stat-time">Media ${escapeHtml(u.avg_time)}</span>
