@@ -786,7 +786,7 @@ body[data-view="view-stats"] .tabbar { display: flex; }
 
 .stats-kpi-row {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
     margin-top: 16px;
 }
