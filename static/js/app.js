@@ -555,6 +555,8 @@ document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
         if (tab.dataset.view === 'view-calendar') {
             openCalendar();
+        } else if (tab.dataset.view === 'view-stats') {
+            openStats();
         } else {
             showView('view-home');
             if (Date.now() - lastStatusAt > 15000) checkStatus({stay: true});
@@ -1230,6 +1232,126 @@ $('btn-recap-save').addEventListener('click', async () => {
         toast("Tieni premuta l'immagine per salvarla in galleria.", 4500);
     }
 });
+
+/* =========================================================
+   STATISTICHE & WALL OF SHAME
+   ========================================================= */
+let statsData = null;
+
+async function openStats() {
+    showView('view-stats');
+    const box = $('stats-container');
+    if (statsData) renderStats(statsData);
+    else box.innerHTML = '<p class="empty-note">Calcolo le statistiche…</p>';
+
+    try {
+        const res = await fetch('/api/stats');
+        if (!res.ok) throw new Error('stats');
+        statsData = await res.json();
+        renderStats(statsData);
+    } catch (err) {
+        if (!statsData) box.innerHTML = '<p class="empty-note">Impossibile caricare le statistiche.</p>';
+    }
+}
+
+function renderStats(data) {
+    const box = $('stats-container');
+    const { summary, shame, badges, leaderboard, top_words } = data;
+
+    const badgeItems = [
+        { title: '🐓 Il Gallo (Media + presto)', info: badges.early_bird },
+        { title: '🦉 Kamikaze (Media + tardi)', info: badges.night_owl },
+        { title: '⚡ Speedrunner (1° del giorno)', info: badges.first_blood },
+        { title: '🎯 Cecchino (Record post 00:02)', info: badges.sniper },
+        { title: '💬 Chiacchierone (+ commenti)', info: badges.chatterbox },
+        { title: '✨ Baffo d\'Oro (+ commentato)', info: badges.star }
+    ].filter(b => b.info);
+
+    box.innerHTML = `
+        <!-- WALL OF SHAME -->
+        <div class="shame-card">
+            <div class="shame-avatar">${escapeHtml(shame.iniziali)}</div>
+            <div class="shame-body">
+                <span class="shame-tag">${shame.type === 'misses' ? '💀 Peggior Baffo' : '🐢 Lumaca del Gruppo'}</span>
+                <p class="shame-text">${escapeHtml(shame.insult)}</p>
+            </div>
+        </div>
+
+        <!-- KPI GLOBALI -->
+        <div class="stats-kpi-row">
+            <div class="kpi-box">
+                <div class="kpi-val">${summary.total_photos}</div>
+                <div class="kpi-lbl">Foto totali</div>
+            </div>
+            <div class="kpi-box">
+                <div class="kpi-val">${summary.perfect_days}/${summary.total_days_elapsed}</div>
+                <div class="kpi-lbl">Giorni 4 su 4</div>
+            </div>
+            <div class="kpi-box">
+                <div class="kpi-val">${summary.total_comments}</div>
+                <div class="kpi-lbl">Commenti</div>
+            </div>
+        </div>
+
+        <!-- CLASSIFICA COSTANZA E ORARI -->
+        <h3 class="stats-block-title">Classifica & Orario Medio</h3>
+        <div class="user-stat-list">
+            ${leaderboard.map((u, idx) => `
+                <div class="user-stat-card">
+                    <div class="user-stat-top">
+                        <div class="user-stat-id">
+                            <div class="user-stat-rank">${idx + 1}°</div>
+                            <span class="user-stat-name">${escapeHtml(u.nome)}</span>
+                        </div>
+                        <span class="user-stat-time">⏰ Media ${escapeHtml(u.avg_time)}</span>
+                    </div>
+                    <div class="user-stat-grid">
+                        <div class="ust-item">
+                            <b class="${u.missed_days > 0 ? 'is-bad' : 'is-good'}">${u.missed_days}</b>
+                            <span>Saltati</span>
+                        </div>
+                        <div class="ust-item">
+                            <b>${u.attendance_rate}%</b>
+                            <span>Presenza</span>
+                        </div>
+                        <div class="ust-item">
+                            <b>${u.current_streak}🔥</b>
+                            <span>Streak</span>
+                        </div>
+                        <div class="ust-item">
+                            <b>${u.first_bloods}⚡</b>
+                            <span>1° posto</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+
+        <!-- TITOLI SPECIALI -->
+        ${badgeItems.length ? `
+            <h3 class="stats-block-title">Titoli del Gruppo</h3>
+            <div class="badges-grid">
+                ${badgeItems.map(b => `
+                    <div class="badge-card">
+                        <div class="badge-head">${b.title}</div>
+                        <div class="badge-winner">${escapeHtml(b.info.nome)}</div>
+                        <div class="badge-val">${escapeHtml(b.info.val)}</div>
+                    </div>
+                `).join('')}
+            </div>
+        ` : ''}
+
+        <!-- PAROLE PIÙ USATE -->
+        ${top_words && top_words.length ? `
+            <h3 class="stats-block-title">Parole più usate nei commenti</h3>
+            <div class="words-cloud">
+                ${top_words.map(w => `
+                    <span class="word-pill">${escapeHtml(w.word)} <small>×${w.count}</small></span>
+                `).join('')}
+            </div>
+        ` : ''}
+    `;
+}
 
 /* =========================================================
    AVVIO
