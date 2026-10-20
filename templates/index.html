@@ -114,7 +114,17 @@
                 </div>
                 <div id="calendar-container" class="calendar-list"></div>
             </section>
-
+            
+            <!-- STATISTICHE -->
+            <section id="view-stats" class="view">
+                <div class="page-head">
+                    <h2 class="page-title">Statistiche</h2>
+                    <p class="page-sub">Orari calcolati sulla finestra 00:02 – 24h</p>
+                </div>
+                <div id="stats-container">
+                    <p class="empty-note">Carico le statistiche…</p>
+                </div>
+            </section>
         </main>
 
         <!-- TAB BAR (visibile solo su Oggi e Calendario, via CSS) -->
@@ -126,6 +136,10 @@
             <button class="tab" data-view="view-calendar">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
                 <span>Calendario</span>
+            </button>
+            <button class="tab" data-view="view-stats">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+                <span>Stats</span>
             </button>
         </nav>
 
