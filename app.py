@@ -378,5 +378,235 @@ scheduler.add_job(func=check_and_send_notifications, trigger="cron", hour=22, mi
 scheduler.start()
 atexit.register(lambda: scheduler.shutdown())
 
+from collections import Counter
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    ZoneInfo = None
+
+@app.route('/api/stats', methods=['GET'])
+def get_stats():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Non autorizzato'}), 401
+
+    start_date = date(2026, 9, 1)
+    end_date = date(2026, 12, 24)
+    today = datetime.utcnow().date()
+    last_eval_date = min(today, end_date)
+
+    users = User.query.all()
+    total_users = len(users)
+    user_map = {u.id: (u.soprannome or u.nome) for u in users}
+
+    photos = Photo.query.filter(
+        Photo.date_created >= start_date,
+        Photo.date_created <= last_eval_date
+    ).order_by(Photo.timestamp.asc()).all()
+
+    comments = Comment.query.all()
+
+    # Raggruppa foto per giorno e per utente
+    photos_by_date = {}
+    photos_by_user = {u.id: [] for u in users}
+    for p in photos:
+        d_key = p.date_created.isoformat()
+        photos_by_date.setdefault(d_key, []).append(p)
+        if p.user_id in photos_by_user:
+            photos_by_user[p.user_id].append(p)
+
+    # Chi è stato il più veloce di giornata (First Blood) e l'ultimo
+    first_blood_counts = {u.id: 0 for u in users}
+    last_man_counts = {u.id: 0 for u in users}
+    perfect_days = 0
+
+    total_days_elapsed = max(0, (last_eval_date - start_date).days + 1)
+
+    for d_key, day_photos in photos_by_date.items():
+        if len(day_photos) >= total_users and total_users > 0:
+            perfect_days += 1
+        # Ordina per timestamp reale
+        sorted_p = sorted(day_photos, key=lambda x: x.timestamp)
+        if sorted_p:
+            first_uid = sorted_p[0].user_id
+            if first_uid in first_blood_counts:
+                first_blood_counts[first_uid] += 1
+            if len(sorted_p) > 1:
+                last_uid = sorted_p[-1].user_id
+                if last_uid in last_man_counts:
+                    last_man_counts[last_uid] += 1
+
+    # Commenti fatti e ricevuti + parole top
+    comments_given = {u.id: 0 for u in users}
+    comments_received = {u.id: 0 for u in users}
+    photo_owner = {p.id: p.user_id for p in photos}
+    words_list = []
+
+    for c in comments:
+        if c.user_id in comments_given:
+            comments_given[c.user_id] += 1
+        owner_id = photo_owner.get(c.photo_id)
+        if owner_id in comments_received:
+            comments_received[owner_id] += 1
+        if c.word:
+            words_list.append(c.word.lower())
+
+    top_words = [{'word': w, 'count': cnt} for w, cnt in Counter(words_list).most_common(6)]
+
+    # Funzione per convertire un timestamp nei minuti trascorsi dalle 00:02
+    def minutes_since_0002(dt):
+        # Se il timestamp nel DB è naive (UTC), ma vuoi l'orario esattamente come lo vedi nel calendario:
+        # Nota: nel tuo /api/calendar usi p.timestamp.strftime('%H:%M') diretto.
+        # Usiamo direttamente ore e minuti di p.timestamp per restare coerenti al 100% col tuo calendario!
+        mins = dt.hour * 60 + dt.minute + (dt.second / 60.0)
+        # L'orario di invio parte dalle 00:02 per 24h:
+        # Quindi 00:02 = 0 min dall'inizio; 00:01 = 1439 min dall'inizio (fine delle 24h)
+        offset = mins - 2
+        if offset < 0:
+            offset += 1440
+        return offset
+
+    def offset_to_hhmm(offset):
+        total_mins = (int(round(offset)) + 2) % 1440
+        h = total_mins // 60
+        m = total_mins % 60
+        return f"{h:02d}:{m:02d}"
+
+    user_stats = []
+    earliest_record = None  # {name, time_str, offset, date}
+    latest_record = None
+
+    for u in users:
+        u_photos = photos_by_user.get(u.id, [])
+        u_dates = set(p.date_created for p in u_photos)
+        photos_count = len(u_dates)
+
+        # Calcolo giorni saltati:
+        # Contiamo i giorni passati fino a ieri. Se anche oggi è iniziato, non contiamo oggi come "saltato" finché non finisce!
+        days_to_check_for_miss = max(0, (min(today - timedelta(days=1), end_date) - start_date).days + 1)
+        photos_before_today = sum(1 for d in u_dates if d < today)
+        missed_days = max(0, days_to_check_for_miss - photos_before_today)
+
+        # Calcolo Streak (serie attuale e record)
+        cur_streak = 0
+        best_streak = 0
+        temp_streak = 0
+        curr_d = start_date
+        while curr_d <= last_eval_date:
+            if curr_d in u_dates:
+                temp_streak += 1
+                if temp_streak > best_streak:
+                    best_streak = temp_streak
+            else:
+                # Se è OGGI e non ha ancora mandato la foto, non azzeriamo la streak attiva di ieri
+                if curr_d < today:
+                    temp_streak = 0
+            curr_d += timedelta(days=1)
+        cur_streak = temp_streak
+
+        # Calcolo orari basati sulla finestra 00:02 -> 00:02
+        offsets = []
+        for p in u_photos:
+            off = minutes_since_0002(p.timestamp)
+            offsets.append(off)
+            t_str = p.timestamp.strftime('%H:%M')
+            if earliest_record is None or off < earliest_record['offset']:
+                earliest_record = {'name': user_map[u.id], 'time': t_str, 'offset': off}
+            if latest_record is None or off > latest_record['offset']:
+                latest_record = {'name': user_map[u.id], 'time': t_str, 'offset': off}
+
+        avg_offset = (sum(offsets) / len(offsets)) if offsets else None
+        avg_time_str = offset_to_hhmm(avg_offset) if avg_offset is not None else "--:--"
+
+        parts = u.nome.split()
+        iniziali = "".join([p[0] for p in parts[:2]]).upper()
+
+        # Denominatore presenza: giorni fino a ieri + 1 se oggi ha già scattato
+        denom = days_to_check_for_miss + (1 if today in u_dates else 0)
+        rate = int(round((photos_count / denom) * 100)) if denom > 0 else 100
+
+        user_stats.append({
+            'id': u.id,
+            'nome': user_map[u.id],
+            'iniziali': iniziali,
+            'photos_count': photos_count,
+            'missed_days': missed_days,
+            'attendance_rate': min(100, rate),
+            'current_streak': cur_streak,
+            'best_streak': best_streak,
+            'avg_time': avg_time_str,
+            'avg_offset': avg_offset if avg_offset is not None else 9999,
+            'first_bloods': first_blood_counts.get(u.id, 0),
+            'last_mans': last_man_counts.get(u.id, 0),
+            'comments_given': comments_given.get(u.id, 0),
+            'comments_received': comments_received.get(u.id, 0)
+        })
+
+    # Ordina la classifica principale: chi ha saltato MENO giorni vince, a parità chi ha l'orario medio più basso!
+    user_stats.sort(key=lambda x: (x['missed_days'], -x['photos_count'], x['avg_offset']))
+
+    # Trova "Il Peggiore" da insultare
+    worst_by_misses = sorted(user_stats, key=lambda x: (-x['missed_days'], -x['avg_offset']))[0]
+    import random
+    if worst_by_misses['missed_days'] > 0:
+        insulti = [
+            f"{worst_by_misses['nome']} ha saltato {worst_by_misses['missed_days']} giorni. Il baffo cresce, la dignità scende.",
+            f"Qualcuno svegli {worst_by_misses['nome']}: {worst_by_misses['missed_days']} foto bucate. Vergogna del gruppo!",
+            f"Premio 'Bidone dell'Anno' a {worst_by_misses['nome']} con {worst_by_misses['missed_days']} assenze ingiustificate.",
+            f"Anche oggi {worst_by_misses['nome']} si impegna domani: già {worst_by_misses['missed_days']} buchi in calendario!",
+            f"{worst_by_misses['nome']} ({worst_by_misses['missed_days']} salti): avevi un solo compito, premere un bottone al giorno."
+        ]
+        shame = {
+            'nome': worst_by_misses['nome'],
+            'iniziali': worst_by_misses['iniziali'],
+            'missed': worst_by_misses['missed_days'],
+            'insult': random.choice(insulti),
+            'type': 'misses'
+        }
+    else:
+        # Se nessuno ha ancora saltato un giorno, insultiamo il più lento di media!
+        with_photos = [u for u in user_stats if u['photos_count'] > 0]
+        slowest = sorted(with_photos, key=lambda x: -x['avg_offset'])[0] if with_photos else user_stats[-1]
+        insulti_lenti = [
+            f"Nessun giorno saltato, ma {slowest['nome']} scatta in media alle {slowest['avg_time']}. Sempre col fiatone!",
+            f"Tutti presenti, ma {slowest['nome']} (media {slowest['avg_time']}) aspetta sempre l'ultimo secondo utile.",
+            f"Zero assenze finora, però {slowest['nome']} se la prende comodissima: media delle {slowest['avg_time']}!"
+        ]
+        shame = {
+            'nome': slowest['nome'],
+            'iniziali': slowest['iniziali'],
+            'missed': 0,
+            'insult': random.choice(insulti_lenti),
+            'type': 'slow'
+        }
+
+    # Calcolo Badges / Titoli
+    with_photos = [u for u in user_stats if u['photos_count'] > 0]
+    early_bird = min(with_photos, key=lambda x: x['avg_offset']) if with_photos else None
+    night_owl = max(with_photos, key=lambda x: x['avg_offset']) if with_photos else None
+    top_first = max(user_stats, key=lambda x: x['first_bloods']) if user_stats else None
+    top_commenter = max(user_stats, key=lambda x: x['comments_given']) if user_stats else None
+    most_commented = max(user_stats, key=lambda x: x['comments_received']) if user_stats else None
+
+    return jsonify({
+        'summary': {
+            'total_photos': len(photos),
+            'perfect_days': perfect_days,
+            'total_days_elapsed': total_days_elapsed,
+            'total_comments': len(comments)
+        },
+        'shame': shame,
+        'badges': {
+            'early_bird': {'nome': early_bird['nome'], 'val': early_bird['avg_time']} if early_bird else None,
+            'night_owl': {'nome': night_owl['nome'], 'val': night_owl['avg_time']} if night_owl else None,
+            'sniper': {'nome': earliest_record['name'], 'val': earliest_record['time']} if earliest_record else None,
+            'first_blood': {'nome': top_first['nome'], 'val': f"{top_first['first_bloods']} volte"} if (top_first and top_first['first_bloods'] > 0) else None,
+            'chatterbox': {'nome': top_commenter['nome'], 'val': f"{top_commenter['comments_given']} comm."} if (top_commenter and top_commenter['comments_given'] > 0) else None,
+            'star': {'nome': most_commented['nome'], 'val': f"{most_commented['comments_received']} ricevuti"} if (most_commented and most_commented['comments_received'] > 0) else None,
+        },
+        'leaderboard': user_stats,
+        'top_words': top_words
+    })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5040, debug=True)
