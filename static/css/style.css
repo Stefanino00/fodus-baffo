@@ -934,3 +934,19 @@ body[data-view="view-stats"] .tabbar { display: flex; }
     color: var(--muted);
     font-weight: 600;
 }
+
+.shame-avatars {
+    display: flex;
+    align-items: center;
+    flex: none;
+}
+.shame-avatars .shame-avatar {
+    width: 46px;
+    height: 46px;
+    font-size: 0.95rem;
+    border: 2.5px solid #FDF2F2;
+    margin-left: -12px;
+}
+.shame-avatars .shame-avatar:first-child {
+    margin-left: 0;
+}
