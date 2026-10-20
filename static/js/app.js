@@ -1256,40 +1256,34 @@ async function openStats() {
 
 function renderStats(data) {
     const box = $('stats-container');
-    const { summary, shame, badges, leaderboard, top_words } = data;
+    const { summary, shame, records, leaderboard } = data;
 
-    const badgeItems = [
-        { title: '🐓 Il Gallo (Media + presto)', info: badges.early_bird },
-        { title: '🦉 Kamikaze (Media + tardi)', info: badges.night_owl },
-        { title: '⚡ Speedrunner (1° del giorno)', info: badges.first_blood },
-        { title: '🎯 Cecchino (Record post 00:02)', info: badges.sniper },
-        { title: '💬 Chiacchierone (+ commenti)', info: badges.chatterbox },
-        { title: '✨ Baffo d\'Oro (+ commentato)', info: badges.star }
-    ].filter(b => b.info);
+    const recordItems = [
+        { title: 'Media più mattiniera', info: records.early_avg },
+        { title: 'Media più tardiva', info: records.late_avg },
+        { title: 'Scatto più presto', info: records.fastest_shot },
+        { title: 'Scatto più al limite', info: records.latest_shot }
+    ].filter(r => r.info);
 
     box.innerHTML = `
-        <!-- WALL OF SHAME -->
+        <!-- PEGGIOR RITARDATARIO -->
         <div class="shame-card">
             <div class="shame-avatar">${escapeHtml(shame.iniziali)}</div>
             <div class="shame-body">
-                <span class="shame-tag">${shame.type === 'misses' ? '💀 Peggior Baffo' : '🐢 Lumaca del Gruppo'}</span>
+                <span class="shame-tag">${escapeHtml(shame.tag)}</span>
                 <p class="shame-text">${escapeHtml(shame.insult)}</p>
             </div>
         </div>
 
-        <!-- KPI GLOBALI -->
+        <!-- RIEPILOGO GRUPPO -->
         <div class="stats-kpi-row">
             <div class="kpi-box">
                 <div class="kpi-val">${summary.total_photos}</div>
-                <div class="kpi-lbl">Foto totali</div>
+                <div class="kpi-lbl">Foto totali inviate</div>
             </div>
             <div class="kpi-box">
-                <div class="kpi-val">${summary.perfect_days}/${summary.total_days_elapsed}</div>
-                <div class="kpi-lbl">Giorni 4 su 4</div>
-            </div>
-            <div class="kpi-box">
-                <div class="kpi-val">${summary.total_comments}</div>
-                <div class="kpi-lbl">Commenti</div>
+                <div class="kpi-val">${summary.perfect_days} <span style="font-size:0.95rem;font-weight:400;color:var(--muted)">su ${summary.total_days_elapsed}</span></div>
+                <div class="kpi-lbl">Giorni con foto di tutti</div>
             </div>
         </div>
 
@@ -1303,50 +1297,40 @@ function renderStats(data) {
                             <div class="user-stat-rank">${idx + 1}°</div>
                             <span class="user-stat-name">${escapeHtml(u.nome)}</span>
                         </div>
-                        <span class="user-stat-time">⏰ Media ${escapeHtml(u.avg_time)}</span>
+                        <span class="user-stat-time">Media ${escapeHtml(u.avg_time)}</span>
                     </div>
                     <div class="user-stat-grid">
                         <div class="ust-item">
                             <b class="${u.missed_days > 0 ? 'is-bad' : 'is-good'}">${u.missed_days}</b>
-                            <span>Saltati</span>
+                            <span>Giorni saltati</span>
+                        </div>
+                        <div class="ust-item">
+                            <b>${u.photos_count}</b>
+                            <span>Foto inviate</span>
                         </div>
                         <div class="ust-item">
                             <b>${u.attendance_rate}%</b>
-                            <span>Presenza</span>
+                            <span>Costanza</span>
                         </div>
                         <div class="ust-item">
-                            <b>${u.current_streak}🔥</b>
-                            <span>Streak</span>
-                        </div>
-                        <div class="ust-item">
-                            <b>${u.first_bloods}⚡</b>
-                            <span>1° posto</span>
+                            <b>${u.current_streak}</b>
+                            <span>Giorni di fila</span>
                         </div>
                     </div>
                 </div>
             `).join('')}
         </div>
 
-        <!-- TITOLI SPECIALI -->
-        ${badgeItems.length ? `
-            <h3 class="stats-block-title">Titoli del Gruppo</h3>
+        <!-- RECORD ORARI -->
+        ${recordItems.length ? `
+            <h3 class="stats-block-title">Record Orari</h3>
             <div class="badges-grid">
-                ${badgeItems.map(b => `
+                ${recordItems.map(r => `
                     <div class="badge-card">
-                        <div class="badge-head">${b.title}</div>
-                        <div class="badge-winner">${escapeHtml(b.info.nome)}</div>
-                        <div class="badge-val">${escapeHtml(b.info.val)}</div>
+                        <div class="badge-head">${r.title}</div>
+                        <div class="badge-winner">${escapeHtml(r.info.nome)}</div>
+                        <div class="badge-val">${escapeHtml(r.info.val)}</div>
                     </div>
-                `).join('')}
-            </div>
-        ` : ''}
-
-        <!-- PAROLE PIÙ USATE -->
-        ${top_words && top_words.length ? `
-            <h3 class="stats-block-title">Parole più usate nei commenti</h3>
-            <div class="words-cloud">
-                ${top_words.map(w => `
-                    <span class="word-pill">${escapeHtml(w.word)} <small>×${w.count}</small></span>
                 `).join('')}
             </div>
         ` : ''}
